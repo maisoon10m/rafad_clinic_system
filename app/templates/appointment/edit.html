@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Appointment{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h1>Edit Appointment</h1>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('appointment.view', id=appointment.id) }}" class="btn btn-info">
+                <i class="fas fa-eye"></i> View Details
+            </a>
+            <a href="{{ url_for('appointment.list') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Appointment Details</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {{ form.csrf_token }}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.patient_id.label(class="form-control-label") }}
+                            {{ form.patient_id(class="form-control" + (" is-invalid" if form.patient_id.errors else ""), id="patient-select") }}
+                            {% for error in form.patient_id.errors %}
+                                <div class="invalid-feedback">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.doctor_id.label(class="form-control-label") }}
+                            {{ form.doctor_id(class="form-control" + (" is-invalid" if form.doctor_id.errors else ""), id="doctor-select") }}
+                            {% for error in form.doctor_id.errors %}
+                                <div class="invalid-feedback">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.appointment_date.label(class="form-control-label") }}
+                            {{ form.appointment_date(class="form-control" + (" is-invalid" if form.appointment_date.errors else ""), type="date") }}
+                            {% for error in form.appointment_date.errors %}
+                                <div class="invalid-feedback">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.appointment_time.label(class="form-control-label") }}
+                            {{ form.appointment_time(class="form-control" + (" is-invalid" if form.appointment_time.errors else ""), type="time") }}
+                            {% for error in form.appointment_time.errors %}
+                                <div class="invalid-feedback">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    {{ form.reason.label(class="form-control-label") }}
+                    {{ form.reason(class="form-control" + (" is-invalid" if form.reason.errors else "")) }}
+                    {% for error in form.reason.errors %}
+                        <div class="invalid-feedback">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="form-group">
+                    {{ form.status.label(class="form-control-label") }}
+                    {{ form.status(class="form-control" + (" is-invalid" if form.status.errors else "")) }}
+                    {% for error in form.status.errors %}
+                        <div class="invalid-feedback">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="form-group">
+                    {{ form.notes.label(class="form-control-label") }}
+                    {{ form.notes(class="form-control" + (" is-invalid" if form.notes.errors else ""), rows=3) }}
+                    {% for error in form.notes.errors %}
+                        <div class="invalid-feedback">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="form-group mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Appointment
+                    </button>
+                    <a href="{{ url_for('appointment.list') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Initialize select2 for patient and doctor dropdowns
+        $('#patient-select').select2({
+            placeholder: 'Select a patient',
+            allowClear: true
+        });
+        
+        $('#doctor-select').select2({
+            placeholder: 'Select a doctor',
+            allowClear: true
+        });
+        
+        // Initialize real-time slot updates for editing
+        initializeSlotUpdates();
+        
+        // Add hidden appointment ID field for validation
+        const form = document.querySelector('form');
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.id = 'appointment_id';
+        hiddenInput.name = 'appointment_id';
+        hiddenInput.value = '{{ appointment.id }}';
+        form.appendChild(hiddenInput);
+        
+        // Initialize schedule conflict checking
+        initializeConflictChecker();
+    });
+</script>
+{% endblock %}

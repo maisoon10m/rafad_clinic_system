@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block title %}Appointment Calendar{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css">
+<style>
+    .fc-event {
+        cursor: pointer;
+    }
+    .fc-event-title {
+        font-weight: 500;
+    }
+    .fc-event-time {
+        font-size: 0.9em;
+    }
+    .fc-daygrid-day-number, .fc-col-header-cell-cushion {
+        text-decoration: none;
+        color: #333;
+    }
+    .fc .fc-toolbar-title {
+        font-size: 1.5rem;
+    }
+    .fc-header-toolbar {
+        margin-bottom: 1em !important;
+    }
+    .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+    }
+    .legend-color {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        margin-right: 5px;
+        border-radius: 3px;
+    }
+    .fc-event.scheduled { background-color: #007bff; border-color: #007bff; }
+    .fc-event.completed { background-color: #28a745; border-color: #28a745; }
+    .fc-event.cancelled { background-color: #dc3545; border-color: #dc3545; }
+    .fc-event.no_show { background-color: #ffc107; border-color: #ffc107; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h1>Appointment Calendar</h1>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group">
+                <a href="{{ url_for('appointment.create') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> New Appointment
+                </a>
+                <a href="{{ url_for('appointment.list') }}" class="btn btn-secondary">
+                    <i class="fas fa-list"></i> List View
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-white">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="legend">
+                        <div class="legend-item">
+                            <span class="legend-color" style="background-color: #007bff;"></span> Scheduled
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background-color: #28a745;"></span> Completed
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background-color: #dc3545;"></span> Cancelled
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background-color: #ffc107;"></span> No Show
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <select id="doctor-filter" class="form-control">
+                            <option value="">All Doctors</option>
+                            {% for doctor in doctors %}
+                                <option value="{{ doctor.id }}">{{ doctor.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="input-group-append">
+                            <button id="apply-filter" class="btn btn-outline-primary" type="button">Apply Filter</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div id="calendar"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Appointment Modal -->
+<div class="modal fade" id="appointmentModal" tabindex="-1" role="dialog" aria-labelledby="appointmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="appointmentModalLabel">Appointment Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="appointment-details">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading appointment details...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" id="view-appointment-btn" class="btn btn-primary">View Full Details</a>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('calendar');
+        let doctorFilter = '';
+        
+        // Initialize the calendar
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            themeSystem: 'bootstrap',
+            events: function(info, successCallback, failureCallback) {
+                // Fetch events from the server
+                $.ajax({
+                    url: '/api/appointments',
+                    method: 'GET',
+                    data: {
+                        start: info.startStr,
+                        end: info.endStr,
+                        doctor_id: doctorFilter
+                    },
+                    success: function(response) {
+                        const events = response.appointments.map(function(appointment) {
+                            return {
+                                id: appointment.id,
+                                title: appointment.patient_name,
+                                start: appointment.appointment_date + 'T' + appointment.appointment_time,
+                                classNames: [appointment.status],
+                                extendedProps: {
+                                    doctor: appointment.doctor_name,
+                                    reason: appointment.reason,
+                                    status: appointment.status
+                                }
+                            };
+                        });
+                        successCallback(events);
+                    },
+                    error: function() {
+                        failureCallback({ message: 'Error fetching appointments' });
+                    }
+                });
+            },
+            eventClick: function(info) {
+                // Show appointment details in modal
+                const appointmentId = info.event.id;
+                $('#view-appointment-btn').attr('href', '/appointment/view/' + appointmentId);
+                
+                // Show modal with loading spinner
+                $('#appointmentModal').modal('show');
+                
+                // Fetch appointment details
+                $.ajax({
+                    url: '/api/appointment/' + appointmentId,
+                    method: 'GET',
+                    success: function(response) {
+                        const appointment = response.appointment;
+                        const statusClass = getStatusClass(appointment.status);
+                        
+                        // Build HTML for appointment details
+                        let html = `
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Patient:</strong> ${appointment.patient_name}</p>
+                                    <p><strong>Doctor:</strong> ${appointment.doctor_name}</p>
+                                    <p><strong>Date & Time:</strong> ${appointment.formatted_date} at ${appointment.formatted_time}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Status:</strong> <span class="badge ${statusClass}">${appointment.status}</span></p>
+                                    <p><strong>Reason:</strong> ${appointment.reason}</p>
+                                </div>
+                            </div>`;
+                        
+                        if (appointment.notes) {
+                            html += `
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <p><strong>Notes:</strong></p>
+                                        <p class="text-muted">${appointment.notes}</p>
+                                    </div>
+                                </div>`;
+                        }
+                        
+                        $('#appointment-details').html(html);
+                    },
+                    error: function() {
+                        $('#appointment-details').html('<div class="alert alert-danger">Error loading appointment details</div>');
+                    }
+                });
+            },
+            eventTimeFormat: {
+                hour: '2-digit',
+                minute: '2-digit',
+                meridiem: false,
+                hour12: false
+            }
+        });
+        
+        calendar.render();
+        
+        // Apply doctor filter
+        $('#apply-filter').on('click', function() {
+            doctorFilter = $('#doctor-filter').val();
+            calendar.refetchEvents();
+        });
+        
+        // Helper function to get status class
+        function getStatusClass(status) {
+            switch(status) {
+                case 'scheduled':
+                    return 'badge-primary';
+                case 'completed':
+                    return 'badge-success';
+                case 'cancelled':
+                    return 'badge-danger';
+                case 'no_show':
+                    return 'badge-warning';
+                default:
+                    return 'badge-secondary';
+            }
+        }
+        
+        // Reset modal content when hidden
+        $('#appointmentModal').on('hidden.bs.modal', function() {
+            $('#appointment-details').html(`
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading appointment details...</p>
+                </div>
+            `);
+        });
+    });
+</script>
+{% endblock %}

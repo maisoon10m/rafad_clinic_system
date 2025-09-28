@@ -1,14 +1,25 @@
 /* 
-   Main CSS styles for Rafad Clinic System 
-*/
+ * Rafad Clinic System - Main CSS
+ * Based on the color scheme from the Rafad logo
+ */
 
-/* Override Bootstrap primary color to match medical theme */
 :root {
-  --primary-color: #3c91e6;
-  --secondary-color: #6cd4ff;
-  --accent-color: #00a8e8;
-  --text-color: #333333;
-  --light-bg: #f5f7fa;
+    /* Main color scheme from the Rafad logo */
+    --rafad-green: #7AAE9F;
+    --rafad-light-green: #9CC5B8;
+    --rafad-coral: #F89B93;
+    --rafad-light-coral: #FFC5C0;
+    --rafad-dark: #333;
+    --rafad-light: #f8f9fa;
+    --rafad-gray: #6c757d;
+    --rafad-white: #ffffff;
+    
+    /* Functional colors */
+    --primary-color: var(--rafad-green);
+    --secondary-color: var(--rafad-coral);
+    --accent-color: var(--rafad-light-green);
+    --text-color: var(--rafad-dark);
+    --light-bg: #f5f8f7;
 }
 
 body {

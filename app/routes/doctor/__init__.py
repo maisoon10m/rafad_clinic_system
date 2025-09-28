@@ -16,8 +16,32 @@ doctor_bp = Blueprint('doctor', __name__)
 @doctor_required
 def dashboard():
     """Doctor dashboard route"""
-    # Will be implemented in Phase 4
-    return render_template('doctor/dashboard.html')
+    doctor = Doctor.query.filter_by(user_id=current_user.id).first()
+    if not doctor:
+        flash('Doctor profile not found.', 'danger')
+        return redirect(url_for('doctor.profile'))
+    
+    # Get today's appointments
+    from datetime import date, datetime
+    today = date.today()
+    todays_appointments = doctor.appointments.filter_by(
+        appointment_date=today, status='booked'
+    ).order_by('start_time').all()
+    
+    # Get upcoming appointments (not today)
+    upcoming_appointments = doctor.appointments.filter(
+        doctor.appointments.appointment_date > today,
+        doctor.appointments.status == 'booked'
+    ).order_by('appointment_date', 'start_time').all()
+    
+    # Get all schedules for this doctor
+    schedules = doctor.schedules.order_by('day_of_week', 'start_time').all()
+    
+    return render_template('doctor/dashboard.html',
+                          doctor=doctor,
+                          todays_appointments=todays_appointments,
+                          upcoming_appointments=upcoming_appointments,
+                          schedules=schedules)
 
 
 @doctor_bp.route('/profile', methods=['GET', 'POST'])

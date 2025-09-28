@@ -3,6 +3,7 @@ Patient routes for Rafad Clinic System
 """
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
+from sqlalchemy import text
 from app.decorators import patient_required
 from app.models import db, Patient
 from app.forms.patient import PatientProfileForm
@@ -16,8 +17,24 @@ patient_bp = Blueprint('patient', __name__)
 @patient_required
 def dashboard():
     """Patient dashboard route"""
-    # Will be implemented in Phase 4
-    return render_template('patient/dashboard.html')
+    patient = Patient.query.filter_by(user_id=current_user.id).first()
+    if not patient:
+        flash('Patient profile not found.', 'danger')
+        return redirect(url_for('patient.profile'))
+    
+    # Get upcoming appointments
+    upcoming_appointments = patient.appointments.filter_by(status='booked').order_by(
+        text('appointment_date'), text('appointment_time')).all()
+    
+    # Get past appointments
+    past_appointments = patient.appointments.filter(
+        patient.appointments.status.in_(['completed', 'cancelled'])
+    ).order_by(text('appointment_date'), text('appointment_time')).all()
+    
+    return render_template('patient/dashboard.html', 
+                           patient=patient,
+                           upcoming_appointments=upcoming_appointments,
+                           past_appointments=past_appointments)
 
 
 @patient_bp.route('/profile', methods=['GET', 'POST'])
