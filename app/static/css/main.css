@@ -1,0 +1,50 @@
+/* 
+   Main CSS styles for Rafad Clinic System 
+*/
+
+/* Override Bootstrap primary color to match medical theme */
+:root {
+  --primary-color: #3c91e6;
+  --secondary-color: #6cd4ff;
+  --accent-color: #00a8e8;
+  --text-color: #333333;
+  --light-bg: #f5f7fa;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text-color);
+  background-color: var(--light-bg);
+}
+
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+  font-weight: bold;
+  font-size: 1.6rem;
+}
+
+.jumbotron {
+  background-color: white;
+  border-radius: 10px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.card {
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+footer {
+  border-top: 1px solid #eee;
+}
