@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Appointments Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Admin Menu</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('admin.dashboard') }}" class="list-group-item list-group-item-action">Dashboard</a>
+                    <a href="{{ url_for('admin.users') }}" class="list-group-item list-group-item-action">Users</a>
+                    <a href="{{ url_for('admin.doctors') }}" class="list-group-item list-group-item-action">Doctors</a>
+                    <a href="{{ url_for('admin.patients') }}" class="list-group-item list-group-item-action">Patients</a>
+                    <a href="{{ url_for('admin.appointments') }}" class="list-group-item list-group-item-action active">Appointments</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Appointments Management</h5>
+                </div>
+                <div class="card-body">
+                    {% if appointments %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Patient</th>
+                                        <th>Doctor</th>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for appointment in appointments %}
+                                    <tr>
+                                        <td>{{ appointment.id }}</td>
+                                        <td>{{ appointment.patient.full_name }}</td>
+                                        <td>{{ appointment.doctor.full_name }}</td>
+                                        <td>{{ appointment.appointment_date.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ appointment.start_time.strftime('%H:%M') }}</td>
+                                        <td>
+                                            {% if appointment.status == 'confirmed' %}
+                                                <span class="badge bg-success">Confirmed</span>
+                                            {% elif appointment.status == 'pending' %}
+                                                <span class="badge bg-warning">Pending</span>
+                                            {% elif appointment.status == 'cancelled' %}
+                                                <span class="badge bg-danger">Cancelled</span>
+                                            {% elif appointment.status == 'completed' %}
+                                                <span class="badge bg-info">Completed</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ appointment.created_at.strftime('%Y-%m-%d') }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <p>No appointments found in the system.</p>
+                            <p class="mb-0">Appointment booking functionality will be available in Phase 4.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

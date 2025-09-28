@@ -43,20 +43,22 @@ def create_app(config_name='development'):
     
     # Register blueprints
     from app.routes import main_bp
-    app.register_blueprint(main_bp)
+    from app.routes.auth import auth_bp
+    from app.routes.admin import admin_bp
+    from app.routes.patient import patient_bp
+    from app.routes.doctor import doctor_bp
     
-    # Additional blueprints will be registered here
-    # Register these as they are developed
-    # from app.routes.auth import auth_bp
-    # from app.routes.admin import admin_bp
-    # from app.routes.patient import patient_bp
-    # from app.routes.doctor import doctor_bp
-    # app.register_blueprint(auth_bp, url_prefix='/auth')
-    # app.register_blueprint(admin_bp, url_prefix='/admin')
-    # app.register_blueprint(patient_bp, url_prefix='/patient')
-    # app.register_blueprint(doctor_bp, url_prefix='/doctor')
+    app.register_blueprint(main_bp)
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(admin_bp, url_prefix='/admin')
+    app.register_blueprint(patient_bp, url_prefix='/patient')
+    app.register_blueprint(doctor_bp, url_prefix='/doctor')
     
     # Error handlers
+    @app.errorhandler(403)
+    def forbidden(e):
+        return render_template('errors/403.html'), 403
+        
     @app.errorhandler(404)
     def page_not_found(e):
         return render_template('errors/404.html'), 404

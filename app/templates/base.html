@@ -40,12 +40,32 @@
                         </li>
                     </ul>
                     <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="nav-link text-white" href="#">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link btn btn-accent btn-sm ms-2 px-3" href="#">Register</a>
-                        </li>
+                        {% if current_user.is_authenticated %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    {{ current_user.username }}
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                    <li><a class="dropdown-item" href="{% if current_user.role == 'admin' %}#{% elif current_user.role == 'doctor' %}{{ url_for('doctor.profile') }}{% else %}{{ url_for('patient.profile') }}{% endif %}">Profile</a></li>
+                                    {% if current_user.role == 'admin' %}
+                                        <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}">Admin Dashboard</a></li>
+                                    {% elif current_user.role == 'doctor' %}
+                                        <li><a class="dropdown-item" href="{{ url_for('doctor.dashboard') }}">Doctor Dashboard</a></li>
+                                    {% else %}
+                                        <li><a class="dropdown-item" href="{{ url_for('patient.dashboard') }}">Patient Dashboard</a></li>
+                                    {% endif %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
+                                </ul>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="{{ url_for('auth.login') }}">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-primary btn-sm ms-2 px-3" href="{{ url_for('auth.register') }}">Register</a>
+                            </li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>
@@ -53,6 +73,17 @@
     </header>
 
     <main class="container my-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
         {% block content %}{% endblock %}
     </main>
 

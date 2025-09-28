@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Patient Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Patient Menu</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('patient.dashboard') }}" class="list-group-item list-group-item-action active">Dashboard</a>
+                    <a href="{{ url_for('patient.profile') }}" class="list-group-item list-group-item-action">Profile</a>
+                    <!-- More menu items will be added in Phase 4 -->
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Dashboard</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h4 class="alert-heading">Welcome to your dashboard!</h4>
+                        <p>This dashboard will provide access to your appointments, medical records, and other features once implemented in Phase 4.</p>
+                        <hr>
+                        <p class="mb-0">Please complete your profile information to get the most out of the system.</p>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-4">
+                            <h5>Quick Actions</h5>
+                            <div class="d-grid gap-2 d-md-flex">
+                                <a href="{{ url_for('patient.profile') }}" class="btn btn-outline-primary">Update Profile</a>
+                                <!-- More action buttons will be added in Phase 4 -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Placeholder for upcoming appointments section - will be implemented in Phase 4 -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">Upcoming Appointments</h5>
+                                    <p class="card-text text-muted">Appointment booking functionality will be available in Phase 4.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
