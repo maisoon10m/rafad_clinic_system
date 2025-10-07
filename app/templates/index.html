@@ -7,12 +7,12 @@
         <p class="lead">A comprehensive web-based appointment management system for medical clinics</p>
         <p class="mb-4">Book appointments online, manage schedules, and streamline your clinic operations with our user-friendly platform</p>
         <div class="mt-4">
-            <a href="#" class="btn btn-primary btn-lg me-2">Book Appointment</a>
-            <a href="#" class="btn btn-outline-primary btn-lg">Learn More</a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg me-2">Book Appointment</a>
+            <a href="{{ url_for('main.about') }}" class="btn btn-outline-primary btn-lg">Learn More</a>
         </div>
     </div>
     <div class="col-md-6 text-center">
-        <img src="{{ url_for('static', filename='img/rafad-logo.svg') }}" alt="Rafad Logo" class="img-fluid" style="max-height: 300px;">
+        <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="Rafad Logo" class="img-fluid" style="max-height: 300px;">
     </div>
 </div>
 
@@ -22,7 +22,7 @@
             <div class="card-body text-center">
                 <h5 class="card-title">For Patients</h5>
                 <p class="card-text">Easy appointment booking, manage your schedule, and access your medical history.</p>
-                <a href="#" class="btn btn-outline-primary">Patient Portal</a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary">Patient Portal</a>
             </div>
         </div>
     </div>
@@ -31,7 +31,7 @@
             <div class="card-body text-center">
                 <h5 class="card-title">For Doctors</h5>
                 <p class="card-text">View your appointments, manage your schedule, and access patient information.</p>
-                <a href="#" class="btn btn-outline-primary">Doctor Portal</a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary">Doctor Portal</a>
             </div>
         </div>
     </div>
@@ -40,7 +40,7 @@
             <div class="card-body text-center">
                 <h5 class="card-title">For Administrators</h5>
                 <p class="card-text">Comprehensive tools to manage clinic operations, staff, and appointments.</p>
-                <a href="#" class="btn btn-outline-primary">Admin Portal</a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary">Admin Portal</a>
             </div>
         </div>
     </div>

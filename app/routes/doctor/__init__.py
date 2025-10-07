@@ -23,19 +23,26 @@ def dashboard():
     
     # Get today's appointments
     from datetime import date, datetime
+    from sqlalchemy import text
+    from app.models.appointment import Appointment
+    
     today = date.today()
-    todays_appointments = doctor.appointments.filter_by(
-        appointment_date=today, status='booked'
-    ).order_by('start_time').all()
+    todays_appointments = Appointment.query.filter_by(
+        doctor_id=doctor.id,
+        appointment_date=today,
+        status='scheduled'
+    ).order_by(Appointment.start_time).all()
     
     # Get upcoming appointments (not today)
-    upcoming_appointments = doctor.appointments.filter(
-        doctor.appointments.appointment_date > today,
-        doctor.appointments.status == 'booked'
-    ).order_by('appointment_date', 'start_time').all()
+    upcoming_appointments = Appointment.query.filter(
+        Appointment.doctor_id == doctor.id,
+        Appointment.appointment_date > today,
+        Appointment.status == 'scheduled'
+    ).order_by(Appointment.appointment_date, Appointment.start_time).all()
     
     # Get all schedules for this doctor
-    schedules = doctor.schedules.order_by('day_of_week', 'start_time').all()
+    from app.models.schedule import Schedule
+    schedules = doctor.schedules.order_by(Schedule.day_of_week, Schedule.start_time).all()
     
     return render_template('doctor/dashboard.html',
                           doctor=doctor,

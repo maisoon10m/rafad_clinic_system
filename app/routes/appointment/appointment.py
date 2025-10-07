@@ -1,7 +1,7 @@
 """
 Appointment routes for the Rafad Clinic System
 """
-from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, abort
+from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, abort, current_app
 from flask_login import login_required, current_user
 from app import db
 from app.models.appointment import Appointment
@@ -11,7 +11,9 @@ from app.models.patient import Patient
 from app.forms.appointment import AppointmentForm, AppointmentStatusForm, AppointmentSearchForm
 from datetime import datetime, timedelta
 from sqlalchemy import or_, and_
+from sqlalchemy.exc import SQLAlchemyError
 from app.utils.decorators import role_required
+from app.utils.error_handler import ErrorHandler
 
 # Create a blueprint for appointment routes
 appointment_bp = Blueprint('appointment', __name__, url_prefix='/appointment')
@@ -79,7 +81,7 @@ def list():
             flash('Invalid date format for date_to', 'error')
     
     # Order by most recent first
-    query = query.order_by(Appointment.appointment_date.desc(), Appointment.appointment_time)
+    query = query.order_by(Appointment.appointment_date.desc(), Appointment.start_time)
     
     # Paginate the results
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
@@ -106,50 +108,92 @@ def create():
     """Create a new appointment"""
     form = AppointmentForm()
     
-    # Check if doctor_id and date are provided in query params
-    # This happens when redirecting from the available slots page
-    doctor_id = request.args.get('doctor_id', type=int)
-    date = request.args.get('date')
-    time = request.args.get('time')
-    
-    if request.method == 'GET' and doctor_id and date:
-        # Pre-fill the form with the provided doctor and date
-        for doctor in form.doctor_id.iter_choices():
-            if doctor[0].id == doctor_id:
-                form.doctor_id.data = doctor[0]
-                break
+    try:
+        # Check if doctor_id and date are provided in query params
+        # This happens when redirecting from the available slots page
+        doctor_id = request.args.get('doctor_id', type=int)
+        date = request.args.get('date')
+        time = request.args.get('time')
         
-        form.appointment_date.data = datetime.strptime(date, '%Y-%m-%d').date()
+        if request.method == 'GET' and doctor_id and date:
+            try:
+                # Pre-fill the form with the provided doctor and date
+                for doctor in form.doctor_id.iter_choices():
+                    if doctor[0].id == doctor_id:
+                        form.doctor_id.data = doctor[0]
+                        break
+                
+                form.appointment_date.data = datetime.strptime(date, '%Y-%m-%d').date()
+                
+                if time:
+                    form.appointment_time.data = datetime.strptime(time, '%H:%M').time()
+            except ValueError as e:
+                # Handle date/time parsing errors
+                ErrorHandler.handle_error(
+                    e, 
+                    user_message="Invalid date or time format provided", 
+                    context={"doctor_id": doctor_id, "date": date, "time": time}
+                )
         
-        if time:
-            form.appointment_time.data = datetime.strptime(time, '%H:%M').time()
+        if form.validate_on_submit():
+            try:
+                # Calculate end_time (30 minutes after appointment_time if not provided)
+                start_time = form.appointment_time.data
+                end_time = form.end_time.data if form.end_time.data else (
+                    datetime.combine(datetime.today(), start_time) + timedelta(minutes=30)
+                ).time()
+                
+                # Create a new appointment
+                appointment = Appointment(
+                    patient_id=form.patient_id.data.id,
+                    doctor_id=form.doctor_id.data.id,
+                    appointment_date=form.appointment_date.data,
+                    start_time=start_time,
+                    end_time=end_time,
+                    reason=form.reason.data,
+                    status=form.status.data,
+                    notes=form.notes.data
+                )
+                
+                # Check if the appointment time is available
+                is_available, reason = Appointment.check_availability(
+                    doctor_id=appointment.doctor_id,
+                    date=appointment.appointment_date,
+                    time=appointment.start_time,
+                    duration_minutes=30  # Default appointment duration
+                )
+                
+                if not is_available:
+                    flash(f'Cannot book this appointment: {reason}', 'error')
+                    return render_template('appointment/create.html', form=form)
+                
+                db.session.add(appointment)
+                db.session.commit()
+                
+                current_app.logger.info(f"Appointment created successfully: ID={appointment.id}, Patient={appointment.patient_id}, Doctor={appointment.doctor_id}")
+                flash('Appointment created successfully!', 'success')
+                return redirect(url_for('appointment.view', id=appointment.id))
+            
+            except SQLAlchemyError as e:
+                db.session.rollback()
+                ErrorHandler.handle_error(
+                    e, 
+                    user_message="An error occurred while saving the appointment. Please try again.", 
+                    context={"form_data": request.form}
+                )
+            except Exception as e:
+                db.session.rollback()
+                ErrorHandler.handle_error(
+                    e, 
+                    user_message="An unexpected error occurred. Please try again later.",
+                    context={"form_data": request.form}
+                )
     
-    if form.validate_on_submit():
-        # Create a new appointment
-        appointment = Appointment(
-            patient_id=form.patient_id.data.id,
-            doctor_id=form.doctor_id.data.id,
-            appointment_date=form.appointment_date.data,
-            appointment_time=form.appointment_time.data,
-            reason=form.reason.data,
-            status=form.status.data,
-            notes=form.notes.data
+    except Exception as e:
+        ErrorHandler.handle_error(
+            e, 
+            user_message="An error occurred while processing your request. Please try again."
         )
-        
-        # Check if the appointment time is available
-        if not Appointment.check_availability(
-            doctor_id=appointment.doctor_id,
-            date=appointment.appointment_date,
-            time=appointment.appointment_time
-        ):
-            flash('This appointment time is already booked. Please select a different time.', 'error')
-            return render_template('appointment/create.html', form=form)
-        
-        db.session.add(appointment)
-        db.session.commit()
-        
-        flash('Appointment created successfully!', 'success')
-        return redirect(url_for('appointment.view', id=appointment.id))
     
     return render_template('appointment/create.html', form=form)
 
@@ -168,23 +212,35 @@ def edit(id):
     form = AppointmentForm(obj=appointment)
     
     if form.validate_on_submit():
-        # Check if the appointment time is available if date or time changed
+        # Check if the appointment time is available if date, time, or doctor changed
         if (form.appointment_date.data != appointment.appointment_date or 
-            form.appointment_time.data != appointment.appointment_time):
-            if not Appointment.check_availability(
+            form.appointment_time.data != appointment.start_time or
+            form.doctor_id.data.id != appointment.doctor_id):
+            
+            is_available, reason = Appointment.check_availability(
                 doctor_id=form.doctor_id.data.id,
                 date=form.appointment_date.data,
                 time=form.appointment_time.data,
-                exclude_appointment_id=appointment.id
-            ):
-                flash('This appointment time is already booked. Please select a different time.', 'error')
+                exclude_appointment_id=appointment.id,
+                duration_minutes=30  # Default appointment duration
+            )
+            
+            if not is_available:
+                flash(f'Cannot update this appointment: {reason}', 'error')
                 return render_template('appointment/edit.html', form=form, appointment=appointment)
+        
+        # Calculate end_time (30 minutes after appointment_time if not provided)
+        start_time = form.appointment_time.data
+        end_time = form.end_time.data if form.end_time.data else (
+            datetime.combine(datetime.today(), start_time) + timedelta(minutes=30)
+        ).time()
         
         # Update appointment fields
         appointment.patient_id = form.patient_id.data.id
         appointment.doctor_id = form.doctor_id.data.id
         appointment.appointment_date = form.appointment_date.data
-        appointment.appointment_time = form.appointment_time.data
+        appointment.start_time = start_time
+        appointment.end_time = end_time
         appointment.reason = form.reason.data
         appointment.status = form.status.data
         appointment.notes = form.notes.data
@@ -220,21 +276,17 @@ def view(id):
     elif current_user.role == 'doctor' and current_user.doctor.id != appointment.doctor_id:
         abort(403)  # Forbidden
     
-    # Get related medical records
-    medical_records = []  # Placeholder - need to implement medical record model
-    
     # Get previous appointments for the same patient
     previous_appointments = Appointment.query.filter_by(
         patient_id=appointment.patient_id
     ).order_by(
         Appointment.appointment_date.desc(), 
-        Appointment.appointment_time.desc()
+        Appointment.start_time.desc()
     ).limit(10).all()
     
     return render_template(
         'appointment/view.html',
         appointment=appointment,
-        medical_records=medical_records,
         previous_appointments=previous_appointments
     )
 

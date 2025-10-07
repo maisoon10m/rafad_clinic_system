@@ -17,12 +17,18 @@ class ScheduleForm(FlaskForm):
         (4, 'Friday'),
         (5, 'Saturday'),
         (6, 'Sunday')
+    ], validators=[
+        DataRequired(message="Please select a day of the week")
     ])
-    start_time = TimeField('Start Time', validators=[DataRequired()])
-    end_time = TimeField('End Time', validators=[DataRequired()])
+    start_time = TimeField('Start Time', validators=[
+        DataRequired(message="Start time is required")
+    ])
+    end_time = TimeField('End Time', validators=[
+        DataRequired(message="End time is required")
+    ])
     is_available = BooleanField('Available', default=True)
-    break_start = TimeField('Break Start')
-    break_end = TimeField('Break End')
+    break_start = TimeField('Break Start (Optional)')
+    break_end = TimeField('Break End (Optional)')
     submit = SubmitField('Save Schedule')
     
     def validate_end_time(self, field):
@@ -54,5 +60,7 @@ class ScheduleForm(FlaskForm):
 
 class ScheduleDeleteForm(FlaskForm):
     """Form for deleting a schedule"""
-    schedule_id = HiddenField()
+    schedule_id = HiddenField(validators=[
+        DataRequired(message="Schedule ID is required")
+    ])
     submit = SubmitField('Delete Schedule')

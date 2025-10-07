@@ -1,7 +1,7 @@
 """
 API endpoints for the appointment system in Rafad Clinic System
 """
-from flask import Blueprint, jsonify, request, abort
+from flask import Blueprint, jsonify, request, abort, current_app
 from flask_login import login_required, current_user
 from app import db
 from app.models.appointment import Appointment
@@ -9,7 +9,9 @@ from app.models.doctor import Doctor
 from app.models.patient import Patient
 from app.models.schedule import Schedule
 from datetime import datetime, date, timedelta
+from sqlalchemy.exc import SQLAlchemyError
 from app.utils.decorators import role_required
+from app.utils.error_handler import ErrorHandler
 
 # Create a blueprint for API routes
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -19,20 +21,54 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 @login_required
 def get_appointments():
     """API endpoint to get appointments for the calendar view"""
-    # Required parameters
-    start_date = request.args.get('start')
-    end_date = request.args.get('end')
-    doctor_id = request.args.get('doctor_id', type=int)
-    
-    # Validate parameters
-    if not start_date or not end_date:
-        return jsonify({'error': 'Missing required parameters (start, end)'}), 400
-    
     try:
-        start_date = datetime.fromisoformat(start_date.split('T')[0]).date()
-        end_date = datetime.fromisoformat(end_date.split('T')[0]).date()
-    except ValueError:
-        return jsonify({'error': 'Invalid date format'}), 400
+        # Required parameters
+        start_date = request.args.get('start')
+        end_date = request.args.get('end')
+        doctor_id = request.args.get('doctor_id', type=int)
+        
+        # Validate parameters
+        if not start_date or not end_date:
+            return jsonify({
+                'status': 'error',
+                'message': 'Missing required parameters',
+                'details': 'Both start and end dates are required'
+            }), 400
+        
+        try:
+            start_date = datetime.fromisoformat(start_date.split('T')[0]).date()
+            end_date = datetime.fromisoformat(end_date.split('T')[0]).date()
+        except ValueError as e:
+            error_response, status_code = ErrorHandler.api_error_response(
+                e, 
+                status_code=400, 
+                user_message='Invalid date format. Use ISO format (YYYY-MM-DD).',
+                context={'start_date': start_date, 'end_date': end_date}
+            )
+            return jsonify(error_response), status_code
+            
+        # Validate date range
+        date_difference = (end_date - start_date).days
+        if date_difference < 0:
+            return jsonify({
+                'status': 'error',
+                'message': 'Invalid date range',
+                'details': 'End date must be after start date'
+            }), 400
+            
+        if date_difference > 90:  # Limit to 3 months of data
+            return jsonify({
+                'status': 'error',
+                'message': 'Date range too large',
+                'details': 'Maximum range is 90 days'
+            }), 400
+    
+    except Exception as e:
+        error_response, status_code = ErrorHandler.api_error_response(
+            e, 
+            user_message='An error occurred while processing date parameters'
+        )
+        return jsonify(error_response), status_code
     
     # Build query based on user role
     if current_user.role == 'patient':

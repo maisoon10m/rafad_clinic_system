@@ -1,10 +1,11 @@
 """
 Authentication routes for Rafad Clinic System
 """
-from flask import Blueprint, render_template, redirect, url_for, flash, request, session
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session, abort
 from flask_login import login_user, logout_user, login_required, current_user
 from app.models import db, User
 from app.forms.auth import LoginForm, RegistrationForm, PasswordResetRequestForm, PasswordResetForm
+from sqlalchemy.exc import IntegrityError
 
 # Create blueprint
 auth_bp = Blueprint('auth', __name__)
@@ -21,6 +22,8 @@ def login():
         user = User.query.filter_by(email=form.email.data).first()
         if user is not None and user.verify_password(form.password.data):
             login_user(user, form.remember_me.data)
+            # Update last login time
+            user.update_last_login()
             next_page = request.args.get('next')
             if not next_page or not next_page.startswith('/'):
                 if user.role == 'admin':
@@ -45,36 +48,60 @@ def logout():
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    """User registration route (for patients only)"""
+    """User registration route with role selection"""
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
     
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User(
-            username=form.username.data,
-            email=form.email.data,
-            role='patient'
-        )
-        user.password = form.password.data
-        db.session.add(user)
-        db.session.flush()  # Generate user_id for the foreign key in Patient
-        
-        from app.models.patient import Patient
-        patient = Patient(
-            user_id=user.id,
-            first_name=form.first_name.data,
-            last_name=form.last_name.data,
-            phone=form.phone.data,
-            date_of_birth=form.date_of_birth.data,
-            gender=form.gender.data,
-            address=form.address.data
-        )
-        db.session.add(patient)
-        db.session.commit()
-        
-        flash('You have registered successfully! Please log in.', 'success')
-        return redirect(url_for('auth.login'))
+        try:
+            user = User(
+                username=form.username.data,
+                email=form.email.data,
+                role=form.role.data  # Use the selected role
+            )
+            user.password = form.password.data
+            db.session.add(user)
+            db.session.flush()  # Generate user_id for the foreign key relationships
+            
+            # Create the appropriate profile based on role
+            if form.role.data == 'patient':
+                from app.models.patient import Patient
+                patient = Patient(
+                    user_id=user.id,
+                    first_name=form.first_name.data,
+                    last_name=form.last_name.data,
+                    phone=form.phone.data,
+                    date_of_birth=form.date_of_birth.data,
+                    gender=form.gender.data,
+                    address=form.address.data,
+                    medical_history=form.medical_history.data if form.medical_history.data else None
+                )
+                db.session.add(patient)
+            elif form.role.data == 'doctor':
+                from app.models.doctor import Doctor
+                doctor = Doctor(
+                    user_id=user.id,
+                    first_name=form.first_name.data,
+                    last_name=form.last_name.data,
+                    specialization=form.specialization.data,
+                    phone=form.phone.data,
+                    qualification=form.qualification.data,
+                    bio=form.bio.data if form.bio.data else None,
+                    experience_years=int(form.experience_years.data) if form.experience_years.data else 0
+                )
+                db.session.add(doctor)
+            
+            db.session.commit()
+            flash(f'You have registered successfully as a {form.role.data.capitalize()}! Please log in.', 'success')
+            return redirect(url_for('auth.login'))
+        except IntegrityError:
+            db.session.rollback()
+            flash('An error occurred during registration. Please try again.', 'danger')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'An error occurred: {str(e)}', 'danger')
+            
     return render_template('auth/register.html', form=form)
 
 
@@ -97,6 +124,39 @@ def password_reset_request():
             return redirect(url_for('auth.login'))
         flash('If that email address is in our system, we have sent you instructions to reset your password.', 'info')
     return render_template('auth/reset_request.html', form=form)
+
+
+@auth_bp.route('/create-admin', methods=['GET', 'POST'])
+def create_admin():
+    """Create admin account route - only accessible if no admin exists"""
+    # Check if admin already exists
+    admin_exists = User.query.filter_by(role='admin').first()
+    if admin_exists:
+        flash('An administrator already exists in the system.', 'danger')
+        return redirect(url_for('auth.login'))
+    
+    form = RegistrationForm()
+    # Remove role field from validation since we're forcing admin role
+    delattr(form, 'role')
+    
+    if form.validate_on_submit():
+        user = User(
+            username=form.username.data,
+            email=form.email.data,
+            role='admin'  # Force admin role
+        )
+        user.password = form.password.data
+        db.session.add(user)
+        
+        try:
+            db.session.commit()
+            flash('Administrator account has been created! Please log in.', 'success')
+            return redirect(url_for('auth.login'))
+        except:
+            db.session.rollback()
+            flash('An error occurred during admin creation. Please try again.', 'danger')
+            
+    return render_template('auth/create_admin.html', form=form)
 
 
 @auth_bp.route('/reset/<token>', methods=['GET', 'POST'])

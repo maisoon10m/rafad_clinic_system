@@ -1,0 +1,23 @@
+/**
+ * Auth buttons visibility fix
+ */
+
+.navbar-nav .nav-item a.nav-link[href*="login"],
+.navbar-nav .nav-item a.nav-link[href*="register"] {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: inline-block !important;
+}
+
+.navbar-nav .nav-item a.nav-link[href*="register"] {
+  background-color: white !important;
+  color: #7AAE9F !important;
+  border-radius: 4px;
+  padding: 0.25rem 0.75rem !important;
+  margin-left: 0.5rem;
+}
+
+.navbar-nav .nav-item a.nav-link[href*="login"] {
+  color: white !important;
+  text-decoration: underline;
+}

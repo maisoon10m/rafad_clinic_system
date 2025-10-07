@@ -23,18 +23,29 @@ def dashboard():
         return redirect(url_for('patient.profile'))
     
     # Get upcoming appointments
-    upcoming_appointments = patient.appointments.filter_by(status='booked').order_by(
-        text('appointment_date'), text('appointment_time')).all()
+    from app.models.appointment import Appointment
+    from sqlalchemy import text
+    upcoming_appointments = Appointment.query.filter_by(
+        patient_id=patient.id,
+        status='scheduled'
+    ).order_by(
+        Appointment.appointment_date, Appointment.start_time
+    ).all()
     
     # Get past appointments
-    past_appointments = patient.appointments.filter(
-        patient.appointments.status.in_(['completed', 'cancelled'])
-    ).order_by(text('appointment_date'), text('appointment_time')).all()
+    past_appointments = Appointment.query.filter(
+        Appointment.patient_id == patient.id,
+        Appointment.status.in_(['completed', 'cancelled'])
+    ).order_by(Appointment.appointment_date.desc(), Appointment.start_time).all()
+    
+    # Medical records will be implemented in the future
+    medical_records = []
     
     return render_template('patient/dashboard.html', 
                            patient=patient,
                            upcoming_appointments=upcoming_appointments,
-                           past_appointments=past_appointments)
+                           past_appointments=past_appointments,
+                           medical_records=medical_records)
 
 
 @patient_bp.route('/profile', methods=['GET', 'POST'])

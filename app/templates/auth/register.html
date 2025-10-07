@@ -6,7 +6,7 @@
         <div class="col-lg-8">
             <div class="card">
                 <div class="card-header text-center">
-                    <h2>Patient Registration</h2>
+                    <h2>Registration</h2>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('auth.register') }}">
@@ -65,6 +65,18 @@
                             {% endif %}
                         </div>
                         
+                        <div class="mb-3">
+                            {{ form.role.label(class="form-label") }}
+                            {{ form.role(class="form-select" + (" is-invalid" if form.role.errors else ""), onchange="toggleRoleFields()") }}
+                            {% if form.role.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.role.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -106,16 +118,92 @@
                             {% endif %}
                         </div>
                         
-                        <div class="mb-3">
-                            {{ form.address.label(class="form-label") }}
-                            {{ form.address(class="form-control" + (" is-invalid" if form.address.errors else ""), rows=3) }}
-                            {% if form.address.errors %}
-                                <div class="invalid-feedback">
-                                    {% for error in form.address.errors %}
-                                        {{ error }}
-                                    {% endfor %}
+                        <!-- Doctor Fields - Initially Hidden -->
+                        <div id="doctor-fields" style="display: none;">
+                            <h4 class="mt-4 mb-3 text-primary">Doctor Information</h4>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        {{ form.specialization.label(class="form-label") }}
+                                        {{ form.specialization(class="form-control" + (" is-invalid" if form.specialization.errors else "")) }}
+                                        {% if form.specialization.errors %}
+                                            <div class="invalid-feedback">
+                                                {% for error in form.specialization.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                            {% endif %}
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        {{ form.qualification.label(class="form-label") }}
+                                        {{ form.qualification(class="form-control" + (" is-invalid" if form.qualification.errors else "")) }}
+                                        {% if form.qualification.errors %}
+                                            <div class="invalid-feedback">
+                                                {% for error in form.qualification.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.experience_years.label(class="form-label") }}
+                                {{ form.experience_years(class="form-control" + (" is-invalid" if form.experience_years.errors else ""), type="number", min="0") }}
+                                {% if form.experience_years.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.experience_years.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group mb-3">
+                                {{ form.bio.label(class="form-label") }}
+                                {{ form.bio(class="form-control" + (" is-invalid" if form.bio.errors else ""), rows=3) }}
+                                {% if form.bio.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.bio.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Patient Fields - Initially Visible -->
+                        <div id="patient-fields">
+                            <h4 class="mt-4 mb-3 text-primary">Patient Information</h4>
+                            
+                            <div class="mb-3">
+                                {{ form.address.label(class="form-label") }}
+                                {{ form.address(class="form-control" + (" is-invalid" if form.address.errors else ""), rows=3) }}
+                                {% if form.address.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.address.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.medical_history.label(class="form-label") }}
+                                {{ form.medical_history(class="form-control" + (" is-invalid" if form.medical_history.errors else ""), rows=3) }}
+                                {% if form.medical_history.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.medical_history.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Please provide any relevant medical history (allergies, conditions, etc.)</small>
+                            </div>
                         </div>
                         
                         <div class="mb-3">
@@ -159,4 +247,25 @@
         </div>
     </div>
 </div>
+
+<script>
+    function toggleRoleFields() {
+        var role = document.getElementById('role').value;
+        var doctorFields = document.getElementById('doctor-fields');
+        var patientFields = document.getElementById('patient-fields');
+        
+        if (role === 'doctor') {
+            doctorFields.style.display = 'block';
+            patientFields.style.display = 'none';
+        } else {
+            doctorFields.style.display = 'none';
+            patientFields.style.display = 'block';
+        }
+    }
+    
+    // Run on page load to set initial state
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleRoleFields();
+    });
+</script>
 {% endblock %}

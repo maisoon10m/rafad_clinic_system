@@ -13,7 +13,7 @@
                 <div class="list-group list-group-flush">
                     <a href="{{ url_for('patient.dashboard') }}" class="list-group-item list-group-item-action active">Dashboard</a>
                     <a href="{{ url_for('patient.profile') }}" class="list-group-item list-group-item-action">Profile</a>
-                    <!-- More menu items will be added in Phase 4 -->
+                    <a href="{{ url_for('appointment.list') }}" class="list-group-item list-group-item-action">My Appointments</a>
                 </div>
             </div>
         </div>
@@ -25,7 +25,7 @@
                 <div class="card-body">
                     <div class="alert alert-info">
                         <h4 class="alert-heading">Welcome to your dashboard!</h4>
-                        <p>This dashboard will provide access to your appointments, medical records, and other features once implemented in Phase 4.</p>
+                        <p>This dashboard provides access to your appointments and other features of the Rafad Clinic System.</p>
                         <hr>
                         <p class="mb-0">Please complete your profile information to get the most out of the system.</p>
                     </div>
@@ -35,18 +35,91 @@
                             <h5>Quick Actions</h5>
                             <div class="d-grid gap-2 d-md-flex">
                                 <a href="{{ url_for('patient.profile') }}" class="btn btn-outline-primary">Update Profile</a>
-                                <!-- More action buttons will be added in Phase 4 -->
+                                <a href="{{ url_for('appointment.list') }}" class="btn btn-primary">Book Appointment</a>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Placeholder for upcoming appointments section - will be implemented in Phase 4 -->
+                    <!-- Upcoming appointments section -->
                     <div class="row">
                         <div class="col-md-12">
                             <div class="card bg-light">
                                 <div class="card-body">
                                     <h5 class="card-title">Upcoming Appointments</h5>
-                                    <p class="card-text text-muted">Appointment booking functionality will be available in Phase 4.</p>
+                                    {% if upcoming_appointments %}
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>Time</th>
+                                                        <th>Doctor</th>
+                                                        <th>Reason</th>
+                                                        <th>Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for appointment in upcoming_appointments %}
+                                                    <tr>
+                                                        <td>{{ appointment.appointment_date.strftime('%Y-%m-%d') }}</td>
+                                                        <td>{{ appointment.start_time.strftime('%H:%M') }}</td>
+                                                        <td>Dr. {{ appointment.doctor.full_name }}</td>
+                                                        <td>{{ appointment.reason }}</td>
+                                                        <td><span class="badge bg-primary">{{ appointment.status }}</span></td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% else %}
+                                        <p class="card-text text-muted">You have no upcoming appointments.</p>
+                                        <a href="{{ url_for('appointment.list') }}" class="btn btn-primary btn-sm">Book an Appointment</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Past appointments section -->
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">Past Appointments</h5>
+                                    {% if past_appointments %}
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>Time</th>
+                                                        <th>Doctor</th>
+                                                        <th>Reason</th>
+                                                        <th>Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for appointment in past_appointments %}
+                                                    <tr>
+                                                        <td>{{ appointment.appointment_date.strftime('%Y-%m-%d') }}</td>
+                                                        <td>{{ appointment.start_time.strftime('%H:%M') }}</td>
+                                                        <td>Dr. {{ appointment.doctor.full_name }}</td>
+                                                        <td>{{ appointment.reason }}</td>
+                                                        <td>
+                                                            {% if appointment.status == 'completed' %}
+                                                                <span class="badge bg-success">{{ appointment.status }}</span>
+                                                            {% else %}
+                                                                <span class="badge bg-secondary">{{ appointment.status }}</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% else %}
+                                        <p class="card-text text-muted">You have no past appointments.</p>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>

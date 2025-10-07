@@ -3,10 +3,11 @@ Rafad Clinic System
 Flask application factory
 """
 from datetime import datetime
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from config import config_dict
+from sqlalchemy.exc import SQLAlchemyError
 from app.models import db, User
 
 
@@ -44,47 +45,49 @@ def create_app(config_name='development'):
     login_manager.init_app(app)
     migrate = Migrate(app, db)
     
-    # Register blueprints
-    from app.routes import main_bp
-    from app.routes.auth import auth_bp
-    from app.routes.admin import admin_bp
-    from app.routes.patient import patient_bp
-    from app.routes.doctor import doctor_bp
-    from app.routes.appointment import appointment_bp
-    from app.routes.schedule import schedule_bp
-    from app.routes.reporting import reporting_bp
-    from app.routes.medical_records import medical_records
-    from app.routes.api.appointment import api_bp
-    from app.routes.api.validation import validate_bp
-    from app.routes.api.schedule import schedule_api_bp
-    
-    app.register_blueprint(main_bp)
-    app.register_blueprint(auth_bp, url_prefix='/auth')
-    app.register_blueprint(admin_bp, url_prefix='/admin')
-    app.register_blueprint(patient_bp, url_prefix='/patient')
-    app.register_blueprint(doctor_bp, url_prefix='/doctor')
-    app.register_blueprint(appointment_bp, url_prefix='/appointment')
-    app.register_blueprint(schedule_bp, url_prefix='/schedule')
-    app.register_blueprint(reporting_bp, url_prefix='/reporting')
-    app.register_blueprint(medical_records, url_prefix='/medical-records')
-    
-    # Register API blueprints
-    app.register_blueprint(api_bp)
-    app.register_blueprint(validate_bp)
-    app.register_blueprint(schedule_api_bp)
+    # Register all blueprints using the centralized registration function
+    from app.routes import register_blueprints
+    register_blueprints(app)
     
     # Error handlers
     @app.errorhandler(403)
     def forbidden(e):
-        return render_template('errors/403.html'), 403
+        app.logger.warning(f"403 Forbidden access: {request.path} - {request.remote_addr}")
+        return render_template('errors/403.html', 
+                              error=e, 
+                              title="Access Forbidden",
+                              message="You do not have permission to access this resource"), 403
         
     @app.errorhandler(404)
     def page_not_found(e):
-        return render_template('errors/404.html'), 404
+        app.logger.info(f"404 Page not found: {request.path} - {request.remote_addr}")
+        return render_template('errors/404.html', 
+                              error=e, 
+                              title="Page Not Found", 
+                              message="The requested page could not be found"), 404
     
     @app.errorhandler(500)
     def internal_server_error(e):
-        return render_template('errors/500.html'), 500
+        # Log the error with traceback
+        from app.utils.error_handler import ErrorHandler
+        ErrorHandler.log_error(e, context={"path": request.path, "method": request.method})
+        
+        return render_template('errors/500.html',
+                              error=e if app.debug else None,
+                              title="Server Error",
+                              message="An unexpected error has occurred. Our technical team has been notified."), 500
+                              
+    # Handle SQLAlchemy errors
+    @app.errorhandler(SQLAlchemyError)
+    def handle_sqlalchemy_error(e):
+        from app.utils.error_handler import ErrorHandler
+        ErrorHandler.log_error(e, context={"path": request.path, "method": request.method})
+        
+        db.session.rollback()
+        return render_template('errors/500.html',
+                              error=e if app.debug else None,
+                              title="Database Error",
+                              message="A database error has occurred. Please try again later."), 500
         
     # Add context processor for templates
     @app.context_processor
