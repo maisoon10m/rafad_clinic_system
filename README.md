@@ -23,23 +23,50 @@ Rafad Clinic System is designed to streamline the operations of medical clinics 
 - **ORM**: SQLAlchemy with Flask-SQLAlchemy
 - **Forms**: Flask-WTF and WTForms
 
-## Project Structure
+## Project Structure (current)
 
 ```
 rafad_clinic_system/
-├── app/
-│   ├── static/           # CSS, JavaScript, and images
-│   ├── templates/        # HTML templates
-│   ├── models/           # Database models
-│   ├── routes/           # Flask route definitions
-│   ├── utils/            # Helper functions and utilities
-│   └── __init__.py       # Flask application factory
-├── migrations/           # Database migrations
-├── tests/                # Unit and integration tests
-├── config.py             # Configuration settings
-├── requirements.txt      # Python dependencies
-└── run.py               # Application entry point
+├── app/                   # Main Flask application package
+│   ├── decorators/        # Role-based access control decorators
+│   ├── forms/             # Flask-WTF forms (appointment/, doctor/, patient/, schedule/)
+│   ├── models/            # SQLAlchemy model definitions
+│   ├── routes/            # Blueprints organized by domain (admin/, api/, appointment/, auth/, doctor/, patient/, reporting/, schedule/)
+│   ├── static/            # CSS / JS / images / uploads
+│   ├── templates/         # Jinja2 templates
+│   ├── utils/             # Helper utilities and validators
+│   └── __init__.py        # Application factory + extension init
+├── docs/                  # Project documentation (moved reports)
+├── migrations/            # Alembic/Flask-Migrate scripts
+│   └── versions/
+├── scripts/               # Utility scripts for DB/schema tasks
+├── tests/                 # Tests organized into subpackages (forms/, models/, routes/, utils/)
+├── config.py              # Configuration classes (development/testing/production)
+├── requirements.txt       # Python dependencies
+├── run.py                 # Application entry point (Flask app runner + CLI commands)
+├── manage.py              # Management CLI (db create/drop/seed, legacy script)
+├── rafad_dev.sqlite       # Development SQLite database (local)
+├── rafad_test.sqlite      # Testing SQLite database (used by pytest)
+└── README.md              # This file
 ```
+
+Notes:
+- Two SQLite files are present intentionally: `rafad_dev.sqlite` (development) and `rafad_test.sqlite` (testing). This keeps tests isolated from development data.
+- If you prefer not to track the database files in git, add them to `.gitignore` and remove them from the repository history.
+- Tests were reorganized under `tests/` into logical subpackages to mirror the app structure.
+
+
+## Project Organization Principles
+
+The project follows these key organization principles:
+
+1. **Modular Structure**: Code is organized into logical modules by functionality.
+2. **Blueprint-Based Routing**: Flask blueprints are used to organize routes by domain.
+3. **Database Abstraction**: SQLAlchemy ORM provides a clean abstraction over the database.
+4. **Separation of Concerns**: Models, views (routes), and forms are kept separate.
+5. **Test Organization**: Tests mirror the main project structure for clarity.
+6. **Utility Scripts**: Database management scripts are organized in the scripts folder.
+7. **Documentation**: Project documentation is centralized in the docs folder.
 
 ## Setup and Installation
 

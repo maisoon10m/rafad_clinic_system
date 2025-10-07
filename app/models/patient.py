@@ -22,6 +22,8 @@ class Patient(db.Model):
     # Relationships
     appointments = db.relationship('Appointment', backref='patient', lazy='dynamic',
                                   cascade='all, delete-orphan')
+    medical_records = db.relationship('MedicalRecord', backref='patient', lazy='dynamic',
+                                    cascade='all, delete-orphan')
     
     @property
     def full_name(self):

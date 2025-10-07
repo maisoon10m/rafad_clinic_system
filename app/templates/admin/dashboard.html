@@ -16,6 +16,9 @@
                     <a href="{{ url_for('admin.doctors') }}" class="list-group-item list-group-item-action">Doctors</a>
                     <a href="{{ url_for('admin.patients') }}" class="list-group-item list-group-item-action">Patients</a>
                     <a href="{{ url_for('admin.appointments') }}" class="list-group-item list-group-item-action">Appointments</a>
+                    <a href="{{ url_for('reporting.dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-bar me-2"></i>Reports & Analytics
+                    </a>
                 </div>
             </div>
         </div>
@@ -100,8 +103,8 @@
                                 </div>
                                 <div class="card-body">
                                     <p>Welcome to the Rafad Clinic System Administration Panel. From here you can manage users, patients, doctors, and appointments.</p>
-                                    <div class="alert alert-info">
-                                        <p><strong>Coming in Phase 5:</strong> Advanced reporting, analytics, and settings management.</p>
+                                    <div class="alert alert-success">
+                                        <p><i class="fas fa-check-circle me-2"></i><strong>New Feature:</strong> Advanced reporting and analytics are now available! <a href="{{ url_for('reporting.dashboard') }}" class="alert-link">Check out the reporting dashboard</a>.</p>
                                     </div>
                                 </div>
                             </div>

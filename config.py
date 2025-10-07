@@ -13,10 +13,15 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
+    # Upload folder for files
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, 'app', 'static', 'uploads')
+    MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB max upload size
+    
     @staticmethod
     def init_app(app):
         """Initialize application with this configuration"""
-        pass
+        # Create upload directory if it doesn't exist
+        os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'test_results'), exist_ok=True)
 
 
 class DevelopmentConfig(Config):

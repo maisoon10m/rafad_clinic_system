@@ -15,3 +15,7 @@ from .doctor import Doctor
 from .schedule import Schedule
 from .appointment import Appointment
 from .setting import Setting
+from .medical_record import (MedicalRecord, Diagnosis, Prescription, 
+                            Treatment, TestResult, MedicalNote, 
+                            DiagnosisRecord, PrescriptionRecord,
+                            TreatmentRecord, TestResultRecord)

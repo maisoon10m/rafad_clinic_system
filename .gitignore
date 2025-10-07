@@ -28,6 +28,33 @@ instance/
 # Virtual Environment
 venv/
 ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Backup files
+*.bak
+*~
+
+# Database
+# Uncomment if you don't want to track database in version control
+# *.sqlite
+# *.db
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Environment variables
+.env
+.env.*
 env/
 
 # SQLite database files

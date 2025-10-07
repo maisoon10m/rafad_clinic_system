@@ -1,0 +1,288 @@
+/**
+ * Enhanced form layouts and UI patterns for Rafad Clinic System
+ */
+
+/* Improved form layouts */
+.form-card {
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  background-color: white;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.form-section {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.form-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.form-section-title {
+  margin-bottom: 1.25rem;
+  color: var(--rafad-green);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.form-section-title i {
+  margin-right: 0.5rem;
+  color: var(--rafad-light-green);
+}
+
+/* Two-column form layout for wider screens */
+@media (min-width: 768px) {
+  .form-row-2col {
+    display: flex;
+    flex-wrap: wrap;
+    margin-right: -10px;
+    margin-left: -10px;
+  }
+
+  .form-col {
+    flex: 0 0 50%;
+    max-width: 50%;
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+}
+
+/* Custom form controls with medical theme */
+.form-control.form-control-medical {
+  border-left: 3px solid var(--rafad-green);
+}
+
+.form-control-medical:focus {
+  border-left-color: var(--medical-blue);
+}
+
+.form-control.is-invalid {
+  border-left: 3px solid var(--medical-alert);
+}
+
+/* Form progress indicator */
+.form-progress {
+  display: flex;
+  margin-bottom: 2rem;
+}
+
+.form-progress-step {
+  flex: 1;
+  text-align: center;
+  position: relative;
+  padding: 0 5px;
+}
+
+.form-progress-step::after {
+  content: '';
+  height: 2px;
+  background-color: var(--light-bg);
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  right: -50%;
+  z-index: 1;
+}
+
+.form-progress-step:last-child::after {
+  display: none;
+}
+
+.form-progress-indicator {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: var(--light-bg);
+  color: var(--rafad-gray);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+  position: relative;
+  z-index: 2;
+  border: 2px solid var(--light-bg);
+  transition: all 0.3s ease;
+}
+
+.form-progress-text {
+  font-size: 0.875rem;
+  color: var(--rafad-gray);
+  display: block;
+}
+
+.form-progress-step.active .form-progress-indicator {
+  background-color: white;
+  color: var(--rafad-green);
+  border-color: var(--rafad-green);
+}
+
+.form-progress-step.active .form-progress-text {
+  color: var(--rafad-green);
+  font-weight: 500;
+}
+
+.form-progress-step.completed .form-progress-indicator {
+  background-color: var(--rafad-green);
+  color: white;
+  border-color: var(--rafad-green);
+}
+
+.form-progress-step.completed::after {
+  background-color: var(--rafad-green);
+}
+
+/* Form elements with improved UI */
+.form-floating .form-control {
+  height: calc(3.5rem + 2px);
+  padding: 1rem 0.75rem;
+}
+
+.form-floating > label {
+  padding: 1rem 0.75rem;
+}
+
+.form-floating .form-control:focus ~ label,
+.form-floating .form-control:not(:placeholder-shown) ~ label {
+  opacity: .65;
+  transform: scale(.85) translateY(-0.5rem) translateX(0.15rem);
+}
+
+/* Custom form switches */
+.form-check-input {
+  width: 2.5em;
+  height: 1.25em;
+  margin-top: 0.125em;
+}
+
+.form-switch .form-check-input {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280, 0, 0, 0.25%29'/%3e%3c/svg%3e");
+}
+
+.form-switch .form-check-input:checked {
+  background-color: var(--rafad-green);
+  border-color: var(--rafad-green);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+}
+
+/* Improved file upload appearance */
+.custom-file-upload {
+  display: inline-block;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 6px;
+  background-color: white;
+  border: 1px dashed var(--rafad-gray);
+  text-align: center;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.custom-file-upload:hover {
+  border-color: var(--rafad-green);
+  background-color: rgba(122, 174, 159, 0.05);
+}
+
+.custom-file-upload i {
+  margin-right: 8px;
+}
+
+.custom-file-upload input[type="file"] {
+  display: none;
+}
+
+/* Enhanced date/time pickers */
+.date-input-group {
+  position: relative;
+}
+
+.date-input-group i {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  color: var(--rafad-gray);
+  pointer-events: none;
+}
+
+.date-input-group input {
+  padding-right: 35px;
+}
+
+/* Range slider with medical theme */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 10px;
+  border-radius: 5px;
+  background: #eee;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--rafad-green);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  background: var(--rafad-light-green);
+  transform: scale(1.1);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--rafad-green);
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  background: var(--rafad-light-green);
+  transform: scale(1.1);
+}
+
+/* Search input with animation */
+.search-form {
+  position: relative;
+}
+
+.search-form input {
+  padding-right: 40px;
+  transition: all 0.3s ease;
+}
+
+.search-form button {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  background: transparent;
+  border: none;
+  padding: 0 15px;
+  color: var(--rafad-gray);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.search-form button:hover {
+  color: var(--rafad-green);
+}
+
+.search-form input:focus {
+  box-shadow: 0 0 0 3px rgba(122, 174, 159, 0.25);
+}

@@ -52,6 +52,8 @@ def create_app(config_name='development'):
     from app.routes.doctor import doctor_bp
     from app.routes.appointment import appointment_bp
     from app.routes.schedule import schedule_bp
+    from app.routes.reporting import reporting_bp
+    from app.routes.medical_records import medical_records
     from app.routes.api.appointment import api_bp
     from app.routes.api.validation import validate_bp
     from app.routes.api.schedule import schedule_api_bp
@@ -63,6 +65,8 @@ def create_app(config_name='development'):
     app.register_blueprint(doctor_bp, url_prefix='/doctor')
     app.register_blueprint(appointment_bp, url_prefix='/appointment')
     app.register_blueprint(schedule_bp, url_prefix='/schedule')
+    app.register_blueprint(reporting_bp, url_prefix='/reporting')
+    app.register_blueprint(medical_records, url_prefix='/medical-records')
     
     # Register API blueprints
     app.register_blueprint(api_bp)

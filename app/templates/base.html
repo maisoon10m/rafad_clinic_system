@@ -15,6 +15,8 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/schedule.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">
     {% block styles %}{% endblock %}
 </head>
 <body>
@@ -23,7 +25,7 @@
             <div class="container">
                 <a class="navbar-brand d-flex align-items-center" href="{{ url_for('main.index') }}">
                     <img src="{{ url_for('static', filename='img/rafad-logo.svg') }}" alt="Rafad Logo" height="40" class="me-2">
-                    <span>Rafad رفد</span>
+                    <span>Rafad <span class="d-none d-sm-inline">رفد</span></span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
@@ -31,40 +33,66 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link text-white" href="{{ url_for('main.index') }}">Home</a>
+                            <a class="nav-link text-white" href="{{ url_for('main.index') }}">
+                                <i class="fas fa-home me-1"></i>
+                                <span>Home</span>
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-white" href="{{ url_for('main.about') }}">About</a>
+                            <a class="nav-link text-white" href="{{ url_for('main.about') }}">
+                                <i class="fas fa-info-circle me-1"></i>
+                                <span>About</span>
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-white" href="#">Services</a>
+                            <a class="nav-link text-white" href="#">
+                                <i class="fas fa-stethoscope me-1"></i>
+                                <span>Services</span>
+                            </a>
                         </li>
                     </ul>
                     <ul class="navbar-nav">
                         {% if current_user.is_authenticated %}
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <a class="nav-link dropdown-toggle text-white d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-user-circle me-1"></i>
                                     {{ current_user.username }}
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                    <li><a class="dropdown-item" href="{% if current_user.role == 'admin' %}#{% elif current_user.role == 'doctor' %}{{ url_for('doctor.profile') }}{% else %}{{ url_for('patient.profile') }}{% endif %}">Profile</a></li>
+                                    <li><a class="dropdown-item" href="{% if current_user.role == 'admin' %}#{% elif current_user.role == 'doctor' %}{{ url_for('doctor.profile') }}{% else %}{{ url_for('patient.profile') }}{% endif %}">
+                                        <i class="fas fa-id-card me-2 text-muted"></i> Profile
+                                    </a></li>
                                     {% if current_user.role == 'admin' %}
-                                        <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}">Admin Dashboard</a></li>
+                                        <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}">
+                                            <i class="fas fa-tachometer-alt me-2 text-muted"></i> Admin Dashboard
+                                        </a></li>
                                     {% elif current_user.role == 'doctor' %}
-                                        <li><a class="dropdown-item" href="{{ url_for('doctor.dashboard') }}">Doctor Dashboard</a></li>
+                                        <li><a class="dropdown-item" href="{{ url_for('doctor.dashboard') }}">
+                                            <i class="fas fa-user-md me-2 text-muted"></i> Doctor Dashboard
+                                        </a></li>
                                     {% else %}
-                                        <li><a class="dropdown-item" href="{{ url_for('patient.dashboard') }}">Patient Dashboard</a></li>
+                                        <li><a class="dropdown-item" href="{{ url_for('patient.dashboard') }}">
+                                            <i class="fas fa-procedures me-2 text-muted"></i> Patient Dashboard
+                                        </a></li>
                                     {% endif %}
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                        <i class="fas fa-sign-out-alt me-2 text-muted"></i> Logout
+                                    </a></li>
                                 </ul>
                             </li>
                         {% else %}
                             <li class="nav-item">
-                                <a class="nav-link text-white" href="{{ url_for('auth.login') }}">Login</a>
+                                <a class="nav-link text-white" href="{{ url_for('auth.login') }}">
+                                    <i class="fas fa-sign-in-alt me-1"></i>
+                                    Login
+                                </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link btn btn-primary btn-sm ms-2 px-3" href="{{ url_for('auth.register') }}">Register</a>
+                                <a class="nav-link btn btn-sm btn-light text-primary ms-2 px-3" href="{{ url_for('auth.register') }}">
+                                    <i class="fas fa-user-plus me-1"></i>
+                                    Register
+                                </a>
                             </li>
                         {% endif %}
                     </ul>

@@ -1,16 +1,19 @@
 /**
  * CSS styles for appointment and schedule management
+ * With responsive design improvements
  */
 
 /* Schedule calendar styling */
 .schedule-table {
     table-layout: fixed;
     width: 100%;
+    overflow-x: auto;
 }
 
 .schedule-table th {
     text-align: center;
     background-color: #f8f9fa;
+    padding: 0.75rem;
 }
 
 .time-label {
@@ -25,6 +28,25 @@
     border: 1px solid #dee2e6;
     vertical-align: top;
     padding: 4px;
+}
+
+/* Responsive schedule table */
+@media (max-width: 991.98px) {
+    .schedule-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .schedule-table th {
+        min-width: 100px;
+    }
+    
+    .time-label {
+        position: sticky;
+        left: 0;
+        background-color: #f8f9fa;
+        z-index: 1;
+    }
 }
 
 .schedule-slot.scheduled {
@@ -63,7 +85,7 @@
     border-color: #ffc107; 
 }
 
-/* Available slots grid */
+/* Available slots grid with responsive improvements */
 .slot-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -71,24 +93,39 @@
     margin-top: 15px;
 }
 
+@media (max-width: 575.98px) {
+    .slot-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 576px) and (max-width: 767.98px) {
+    .slot-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
 .slot-button {
     padding: 10px;
     text-align: center;
     border: 1px solid #ddd;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
+    background-color: var(--rafad-white);
+    color: var(--rafad-dark);
 }
 
 .slot-button:hover {
-    background-color: #f0f7ff;
-    border-color: #007bff;
+    background-color: var(--rafad-light-green);
+    border-color: var(--rafad-green);
+    color: white;
 }
 
 .slot-button.selected {
-    background-color: #007bff;
+    background-color: var(--rafad-green);
     color: white;
-    border-color: #0056b3;
+    border-color: var(--rafad-green);
 }
 
 /* Floating alert */

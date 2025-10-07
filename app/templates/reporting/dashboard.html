@@ -1,0 +1,493 @@
+{% extends 'base.html' %}
+
+{% block title %}Reporting Dashboard{% endblock %}
+
+{% block styles %}
+<link href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css" rel="stylesheet">
+<style>
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 2rem;
+    }
+    .report-card {
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .report-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+    .report-icon {
+        font-size: 2rem;
+        color: var(--rafad-green);
+        margin-bottom: 1rem;
+    }
+    .report-tabs .nav-link {
+        color: var(--rafad-dark);
+        border-radius: 0;
+        padding: 1rem 1.5rem;
+    }
+    .report-tabs .nav-link.active {
+        color: var(--rafad-green);
+        border-bottom: 3px solid var(--rafad-green);
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Reporting & Analytics</h1>
+        <div>
+            <button class="btn btn-outline-secondary me-2">
+                <i class="fas fa-calendar me-1"></i>
+                <span id="reportingRange">Last 30 Days</span>
+            </button>
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-primary" id="exportCSV">
+                    <i class="fas fa-file-csv me-1"></i> Export CSV
+                </button>
+                <button type="button" class="btn btn-outline-primary" id="exportPDF">
+                    <i class="fas fa-file-pdf me-1"></i> Export PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card report-card bg-white">
+                <div class="card-body text-center">
+                    <div class="report-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <h5 class="card-title">Total Appointments</h5>
+                    <h2 class="mb-0" id="totalAppointments">Loading...</h2>
+                    <p class="text-muted small">Last 30 days</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card report-card bg-white">
+                <div class="card-body text-center">
+                    <div class="report-icon">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <h5 class="card-title">Doctor Utilization</h5>
+                    <h2 class="mb-0" id="avgUtilization">Loading...</h2>
+                    <p class="text-muted small">Average appointments per doctor</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card report-card bg-white">
+                <div class="card-body text-center">
+                    <div class="report-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h5 class="card-title">New Patients</h5>
+                    <h2 class="mb-0" id="newPatients">Loading...</h2>
+                    <p class="text-muted small">New registrations</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card report-card bg-white">
+                <div class="card-body text-center">
+                    <div class="report-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h5 class="card-title">Growth Rate</h5>
+                    <h2 class="mb-0" id="growthRate">Loading...</h2>
+                    <p class="text-muted small">vs. previous period</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs report-tabs mb-4" id="reportingTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">
+                <i class="fas fa-chart-pie me-2"></i>Overview
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="appointments-tab" data-bs-toggle="tab" data-bs-target="#appointments" type="button" role="tab" aria-controls="appointments" aria-selected="false">
+                <i class="fas fa-calendar-check me-2"></i>Appointments
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="doctors-tab" data-bs-toggle="tab" data-bs-target="#doctors" type="button" role="tab" aria-controls="doctors" aria-selected="false">
+                <i class="fas fa-user-md me-2"></i>Doctors
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="patients-tab" data-bs-toggle="tab" data-bs-target="#patients" type="button" role="tab" aria-controls="patients" aria-selected="false">
+                <i class="fas fa-users me-2"></i>Patients
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="reportingTabsContent">
+        <!-- Overview Tab -->
+        <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+            <div class="row">
+                <!-- Daily Appointments Chart -->
+                <div class="col-md-8">
+                    <div class="card report-card bg-white mb-4">
+                        <div class="card-header bg-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Daily Appointments</h5>
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-outline-secondary active" data-period="week">Week</button>
+                                    <button type="button" class="btn btn-outline-secondary" data-period="month">Month</button>
+                                    <button type="button" class="btn btn-outline-secondary" data-period="quarter">Quarter</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="dailyAppointmentsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appointment Status Chart -->
+                <div class="col-md-4">
+                    <div class="card report-card bg-white mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">Appointment Status</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="appointmentStatusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Doctor Utilization Chart -->
+                <div class="col-md-6">
+                    <div class="card report-card bg-white mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">Doctor Utilization</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="doctorUtilizationChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Specialization Distribution Chart -->
+                <div class="col-md-6">
+                    <div class="card report-card bg-white mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">Appointment by Specialization</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="specializationChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Other tabs will be implemented in subsequent phases -->
+        <div class="tab-pane fade" id="appointments" role="tabpanel" aria-labelledby="appointments-tab">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Detailed appointment reports are being implemented. Check back soon.
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="doctors" role="tabpanel" aria-labelledby="doctors-tab">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Detailed doctor performance metrics are being implemented. Check back soon.
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="patients" role="tabpanel" aria-labelledby="patients-tab">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Patient analytics dashboard is being implemented. Check back soon.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize charts
+        initializeDailyAppointmentsChart();
+        initializeAppointmentStatusChart();
+        initializeDoctorUtilizationChart();
+        
+        // For demo, set placeholder values
+        document.getElementById('totalAppointments').textContent = '152';
+        document.getElementById('avgUtilization').textContent = '18.5';
+        document.getElementById('newPatients').textContent = '42';
+        document.getElementById('growthRate').textContent = '+12.4%';
+    });
+    
+    function initializeDailyAppointmentsChart() {
+        const ctx = document.getElementById('dailyAppointmentsChart').getContext('2d');
+        
+        // We'll fetch actual data from the API in the next implementation
+        fetch('/reporting/api/appointments/daily')
+            .then(response => response.json())
+            .then(data => {
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            title: {
+                                display: true,
+                                text: 'Daily Appointment Volume'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching daily appointments data:', error);
+                // Demo data for now
+                const demoData = {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Daily Appointments',
+                        data: [12, 19, 15, 8, 22, 14, 10],
+                        backgroundColor: 'rgba(122, 174, 159, 0.6)',
+                        borderColor: 'rgba(122, 174, 159, 1)',
+                    }]
+                };
+                
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: demoData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            title: {
+                                display: true,
+                                text: 'Daily Appointment Volume (Demo Data)'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            });
+    }
+    
+    function initializeAppointmentStatusChart() {
+        const ctx = document.getElementById('appointmentStatusChart').getContext('2d');
+        
+        // We'll fetch actual data from the API in the next implementation
+        fetch('/reporting/api/appointments/status')
+            .then(response => response.json())
+            .then(data => {
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                            },
+                            title: {
+                                display: true,
+                                text: 'Appointments by Status'
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching appointment status data:', error);
+                // Demo data for now
+                const demoData = {
+                    labels: ['Completed', 'Cancelled', 'Pending', 'Confirmed'],
+                    datasets: [{
+                        data: [65, 15, 10, 25],
+                        backgroundColor: [
+                            'rgba(122, 174, 159, 0.6)',  // green
+                            'rgba(248, 155, 147, 0.6)',  // coral
+                            'rgba(74, 137, 220, 0.6)',   // blue
+                            'rgba(255, 206, 84, 0.6)',   // yellow
+                        ],
+                    }]
+                };
+                
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: demoData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                            },
+                            title: {
+                                display: true,
+                                text: 'Appointments by Status (Demo Data)'
+                            }
+                        }
+                    }
+                });
+            });
+    }
+    
+    function initializeDoctorUtilizationChart() {
+        const ctx = document.getElementById('doctorUtilizationChart').getContext('2d');
+        
+        // We'll fetch actual data from the API in the next implementation
+        fetch('/reporting/api/doctor/utilization')
+            .then(response => response.json())
+            .then(data => {
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Appointments per Doctor'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching doctor utilization data:', error);
+                // Demo data for now
+                const demoData = {
+                    labels: ['Dr. Smith', 'Dr. Johnson', 'Dr. Williams', 'Dr. Brown', 'Dr. Davis'],
+                    datasets: [{
+                        label: 'Appointments',
+                        data: [25, 18, 22, 15, 20],
+                        backgroundColor: 'rgba(122, 174, 159, 0.6)',
+                        borderColor: 'rgba(122, 174, 159, 1)',
+                    }]
+                };
+                
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: demoData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Appointments per Doctor (Demo Data)'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            });
+            
+        // Initialize demo specialization chart
+        const ctxSpec = document.getElementById('specializationChart').getContext('2d');
+        const demoSpecData = {
+            labels: ['Cardiology', 'Dermatology', 'Pediatrics', 'Neurology', 'Orthopedics', 'General'],
+            datasets: [{
+                label: 'Appointments',
+                data: [35, 28, 42, 22, 30, 15],
+                backgroundColor: [
+                    'rgba(122, 174, 159, 0.6)',
+                    'rgba(248, 155, 147, 0.6)',
+                    'rgba(74, 137, 220, 0.6)',
+                    'rgba(255, 206, 84, 0.6)',
+                    'rgba(172, 146, 236, 0.6)',
+                    'rgba(237, 85, 101, 0.6)',
+                ],
+            }]
+        };
+        
+        new Chart(ctxSpec, {
+            type: 'pie',
+            data: demoSpecData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Appointments by Specialization (Demo Data)'
+                    }
+                }
+            }
+        });
+    }
+    
+    // Export functionality (to be implemented fully in next phase)
+    document.getElementById('exportCSV').addEventListener('click', function() {
+        alert('Export to CSV will be implemented in the next phase.');
+    });
+    
+    document.getElementById('exportPDF').addEventListener('click', function() {
+        alert('Export to PDF will be implemented in the next phase.');
+    });
+</script>
+{% endblock %}

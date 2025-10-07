@@ -17,3 +17,19 @@ def role_required(*roles):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
+def admin_required(f):
+    """Decorator to restrict routes to admin users"""
+    return role_required('admin')(f)
+
+def doctor_required(f):
+    """Decorator to restrict routes to doctor users"""
+    return role_required('doctor')(f)
+
+def patient_required(f):
+    """Decorator to restrict routes to patient users"""
+    return role_required('patient')(f)
+
+def patient_or_doctor_required(f):
+    """Decorator to restrict routes to patient or doctor users"""
+    return role_required('patient', 'doctor')(f)
