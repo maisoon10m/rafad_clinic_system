@@ -19,6 +19,18 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/auth-buttons-fix.css') }}">
+    <style>
+        .navbar-brand {
+            background-color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .navbar-brand span {
+            color: var(--rafad-green) !important;
+            font-weight: 600;
+        }
+    </style>
     {% block styles %}{% endblock %}
 </head>
 <body>
@@ -46,12 +58,6 @@
                                 <span>About</span>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white" href="#">
-                                <i class="fas fa-stethoscope me-1"></i>
-                                <span>Services</span>
-                            </a>
-                        </li>
                     </ul>
                     <ul class="navbar-nav">
                         {% if current_user.is_authenticated %}
@@ -61,9 +67,11 @@
                                     {{ current_user.username }}
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                    <li><a class="dropdown-item" href="{% if current_user.role == 'admin' %}#{% elif current_user.role == 'doctor' %}{{ url_for('doctor.profile') }}{% else %}{{ url_for('patient.profile') }}{% endif %}">
-                                        <i class="fas fa-id-card me-2 text-muted"></i> Profile
-                                    </a></li>
+                                    {% if current_user.role != 'admin' %}
+                                        <li><a class="dropdown-item" href="{% if current_user.role == 'doctor' %}{{ url_for('doctor.profile') }}{% else %}{{ url_for('patient.profile') }}{% endif %}">
+                                            <i class="fas fa-id-card me-2 text-muted"></i> Profile
+                                        </a></li>
+                                    {% endif %}
                                     {% if current_user.role == 'admin' %}
                                         <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}">
                                             <i class="fas fa-tachometer-alt me-2 text-muted"></i> Admin Dashboard
@@ -125,25 +133,16 @@
     <footer class="py-4 mt-5">
         <div class="container">
             <div class="row">
-                <div class="col-md-4 mb-3">
+                <div class="col-md-6 mb-3">
                     <h5>Rafad رفد Clinic</h5>
                     <p class="small">A comprehensive web-based appointment management system for medical clinics.</p>
                 </div>
-                <div class="col-md-4 mb-3">
-                    <h5>Quick Links</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="{{ url_for('main.index') }}" class="text-white">Home</a></li>
-                        <li><a href="{{ url_for('main.about') }}" class="text-white">About Us</a></li>
-                        <li><a href="#" class="text-white">Book Appointment</a></li>
-                        <li><a href="#" class="text-white">Contact Us</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-6 mb-3">
                     <h5>Contact</h5>
                     <address class="small">
-                        123 Medical Center Blvd<br>
-                        City, State 12345<br>
-                        <i class="fas fa-phone"></i> (123) 456-7890<br>
+                        IAU University<br>
+                        Dammam 34212<br>
+                        <i class="fas fa-phone"></i> 0133333766<br>
                         <i class="fas fa-envelope"></i> info@rafadclinic.com
                     </address>
                 </div>

@@ -13,14 +13,26 @@ auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    """User login route"""
+    """User login route with role validation"""
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
     
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
+        # Strip whitespace from email
+        email = form.email.data.strip() if form.email.data else ''
+        selected_role = form.role.data
+        
+        user = User.query.filter_by(email=email).first()
+        
+        # Check if user exists and password is correct
         if user is not None and user.verify_password(form.password.data):
+            # Validate that the selected role matches the user's actual role
+            if user.role != selected_role:
+                flash(f'Invalid credentials for {selected_role.title()} role. Please select the correct role or check your credentials.', 'danger')
+                return render_template('auth/login.html', form=form)
+            
+            # Role matches, proceed with login
             login_user(user, form.remember_me.data)
             # Update last login time
             user.update_last_login()

@@ -13,40 +13,131 @@
                 <div class="list-group list-group-flush">
                     <a href="{{ url_for('doctor.dashboard') }}" class="list-group-item list-group-item-action active">Dashboard</a>
                     <a href="{{ url_for('doctor.profile') }}" class="list-group-item list-group-item-action">Profile</a>
-                    <!-- More menu items will be added in Phase 4 -->
+                    <a href="{{ url_for('schedule.list') }}" class="list-group-item list-group-item-action">My Schedule</a>
+                    <a href="{{ url_for('appointment.list') }}" class="list-group-item list-group-item-action">All Appointments</a>
                 </div>
             </div>
         </div>
         <div class="col-md-9">
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Dashboard</h5>
+                    <h5 class="mb-0">Doctor Dashboard</h5>
                 </div>
                 <div class="card-body">
                     <div class="alert alert-info">
-                        <h4 class="alert-heading">Welcome to your dashboard!</h4>
-                        <p>This dashboard will provide access to your schedule, appointments, and patient records once implemented in Phase 4.</p>
+                        <h4 class="alert-heading">Welcome, Dr. {{ current_user.doctor.full_name if current_user.doctor else current_user.username }}!</h4>
+                        <p>View your schedule and manage appointments from this dashboard.</p>
                         <hr>
-                        <p class="mb-0">Please complete your profile information to ensure patients can find you.</p>
+                        <p class="mb-0">Keep your profile and schedule up to date for better patient service.</p>
                     </div>
                     
                     <div class="row">
                         <div class="col-md-12 mb-4">
                             <h5>Quick Actions</h5>
                             <div class="d-grid gap-2 d-md-flex">
-                                <a href="{{ url_for('doctor.profile') }}" class="btn btn-outline-primary">Update Profile</a>
-                                <!-- More action buttons will be added in Phase 4 -->
+                                <a href="{{ url_for('doctor.profile') }}" class="btn btn-outline-primary">
+                                    <i class="fas fa-user-edit me-1"></i> Update Profile
+                                </a>
+                                <a href="{{ url_for('schedule.list') }}" class="btn btn-outline-primary">
+                                    <i class="fas fa-calendar-alt me-1"></i> Manage Schedule
+                                </a>
+                                <a href="{{ url_for('appointment.list') }}" class="btn btn-primary">
+                                    <i class="fas fa-calendar-check me-1"></i> View Appointments
+                                </a>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Placeholder for today's appointments section - will be implemented in Phase 4 -->
+                    <!-- Today's appointments section -->
                     <div class="row">
                         <div class="col-md-12">
                             <div class="card bg-light">
                                 <div class="card-body">
-                                    <h5 class="card-title">Today's Appointments</h5>
-                                    <p class="card-text text-muted">Appointment management functionality will be available in Phase 4.</p>
+                                    <h5 class="card-title">
+                                        <i class="fas fa-calendar-day me-2"></i>Today's Appointments
+                                    </h5>
+                                    {% if todays_appointments %}
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Time</th>
+                                                        <th>Patient</th>
+                                                        <th>Reason</th>
+                                                        <th>Status</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for appointment in todays_appointments %}
+                                                    <tr>
+                                                        <td>{{ appointment.start_time.strftime('%H:%M') }} - {{ appointment.end_time.strftime('%H:%M') }}</td>
+                                                        <td>{{ appointment.patient.full_name if appointment.patient else 'N/A' }}</td>
+                                                        <td>{{ appointment.reason or 'No reason specified' }}</td>
+                                                        <td>
+                                                            <span class="badge bg-{% if appointment.status == 'scheduled' %}primary{% elif appointment.status == 'completed' %}success{% elif appointment.status == 'cancelled' %}danger{% else %}warning{% endif %}">
+                                                                {{ appointment.status }}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <a href="{{ url_for('appointment.view', id=appointment.id) }}" class="btn btn-sm btn-outline-primary">
+                                                                <i class="fas fa-eye"></i> View
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% else %}
+                                        <p class="card-text text-muted">You have no appointments scheduled for today.</p>
+                                        <a href="{{ url_for('appointment.list') }}" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-calendar-alt me-1"></i> View All Appointments
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upcoming appointments section -->
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-clock me-2"></i>Upcoming Appointments (Next 7 Days)
+                                    </h5>
+                                    {% if upcoming_appointments %}
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>Time</th>
+                                                        <th>Patient</th>
+                                                        <th>Reason</th>
+                                                        <th>Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for appointment in upcoming_appointments %}
+                                                    <tr>
+                                                        <td>{{ appointment.appointment_date.strftime('%Y-%m-%d') }}</td>
+                                                        <td>{{ appointment.start_time.strftime('%H:%M') }}</td>
+                                                        <td>{{ appointment.patient.full_name if appointment.patient else 'N/A' }}</td>
+                                                        <td>{{ appointment.reason or 'No reason specified' }}</td>
+                                                        <td>
+                                                            <span class="badge bg-primary">{{ appointment.status }}</span>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% else %}
+                                        <p class="card-text text-muted">You have no upcoming appointments in the next 7 days.</p>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>

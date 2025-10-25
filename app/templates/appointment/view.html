@@ -10,12 +10,14 @@
         </div>
         <div class="col-auto">
             <div class="btn-group">
+                {% if current_user.role in ['admin', 'receptionist'] %}
                 <a href="{{ url_for('appointment.edit', id=appointment.id) }}" class="btn btn-primary">
                     <i class="fas fa-edit"></i> Edit
                 </a>
-                <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal">
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                     <i class="fas fa-trash"></i> Delete
                 </button>
+                {% endif %}
                 <a href="{{ url_for('appointment.list') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Back to List
                 </a>
@@ -41,11 +43,11 @@
                     <div class="row">
                         <div class="col-md-6">
                             <p class="mb-1"><strong>Patient:</strong></p>
-                            <p><a href="{{ url_for('patient.view', id=appointment.patient_id) }}">{{ appointment.patient.full_name }}</a></p>
+                            <p>{{ appointment.patient.full_name }}</p>
                         </div>
                         <div class="col-md-6">
                             <p class="mb-1"><strong>Doctor:</strong></p>
-                            <p><a href="{{ url_for('staff.view', id=appointment.doctor_id) }}">{{ appointment.doctor.full_name }}</a></p>
+                            <p>{{ appointment.doctor.full_name }}</p>
                         </div>
                     </div>
                     <div class="row">

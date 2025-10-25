@@ -1,5 +1,57 @@
 {% extends "base.html" %}
 
+{% block styles %}
+<style>
+    .role-selector {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .role-option {
+        flex: 1;
+        min-width: 120px;
+    }
+    .role-option input[type="radio"] {
+        display: none;
+    }
+    .role-option label {
+        display: block;
+        padding: 15px 10px;
+        text-align: center;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background-color: #f8f9fa;
+    }
+    .role-option input[type="radio"]:checked + label {
+        font-weight: 600;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .role-option.patient input[type="radio"]:checked + label {
+        border-color: #4A89DC;
+        color: #4A89DC;
+        background-color: rgba(74, 137, 220, 0.1);
+    }
+    .role-option.doctor input[type="radio"]:checked + label {
+        border-color: #7AAE9F;
+        color: #7AAE9F;
+        background-color: rgba(122, 174, 159, 0.1);
+    }
+    .role-option.admin input[type="radio"]:checked + label {
+        border-color: #ED5565;
+        color: #ED5565;
+        background-color: rgba(237, 85, 101, 0.1);
+    }
+    .role-option label i {
+        display: block;
+        font-size: 24px;
+        margin-bottom: 5px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -11,6 +63,42 @@
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('auth.login') }}">
                         {{ form.hidden_tag() }}
+                        
+                        <!-- Role Selection -->
+                        <div class="mb-4">
+                            <label class="form-label text-center d-block">Select Your Role</label>
+                            <div class="role-selector">
+                                <div class="role-option patient">
+                                    <input type="radio" name="role" id="role_patient" value="patient" {% if form.role.data == 'patient' %}checked{% endif %} required>
+                                    <label for="role_patient">
+                                        <i class="fas fa-user"></i>
+                                        <span>Patient</span>
+                                    </label>
+                                </div>
+                                <div class="role-option doctor">
+                                    <input type="radio" name="role" id="role_doctor" value="doctor" {% if form.role.data == 'doctor' %}checked{% endif %} required>
+                                    <label for="role_doctor">
+                                        <i class="fas fa-user-md"></i>
+                                        <span>Doctor</span>
+                                    </label>
+                                </div>
+                                <div class="role-option admin">
+                                    <input type="radio" name="role" id="role_admin" value="admin" {% if form.role.data == 'admin' %}checked{% endif %} required>
+                                    <label for="role_admin">
+                                        <i class="fas fa-user-shield"></i>
+                                        <span>Admin</span>
+                                    </label>
+                                </div>
+                            </div>
+                            {% if form.role.errors %}
+                                <div class="text-danger small mt-2">
+                                    {% for error in form.role.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
                         <div class="mb-3">
                             {{ form.email.label(class="form-label") }}
                             {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="Enter your email") }}

@@ -40,8 +40,21 @@ class TestingConfig(Config):
 
 class ProductionConfig(Config):
     """Production configuration"""
+    DEBUG = False
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'sqlite:///' + str(BASE_DIR / 'rafad_prod.sqlite')
+    
+    @staticmethod
+    def init_app(app):
+        """Initialize production settings"""
+        Config.init_app(app)
+        
+        # Log to stderr
+        import logging
+        from logging import StreamHandler
+        file_handler = StreamHandler()
+        file_handler.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
 
 
 # Configuration dictionary

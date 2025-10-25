@@ -103,10 +103,29 @@ def list():
 
 @appointment_bp.route('/create', methods=['GET', 'POST'])
 @login_required
-@role_required(['admin', 'doctor', 'receptionist'])
 def create():
     """Create a new appointment"""
+    # Doctors should not be able to create appointments
+    if current_user.role == 'doctor':
+        flash('Doctors cannot create appointments. Patients book appointments with you.', 'warning')
+        return redirect(url_for('appointment.list'))
+    
     form = AppointmentForm()
+    
+    # Check if the current user is a patient
+    is_patient = current_user.role == 'patient'
+    current_patient = None
+    
+    if is_patient:
+        # Get the patient record for the current user
+        current_patient = Patient.query.filter_by(user_id=current_user.id).first()
+        if not current_patient:
+            flash('Patient profile not found. Please contact support.', 'error')
+            return redirect(url_for('main.index'))
+        
+        # For patients, set patient_id to current patient and bypass validation
+        form.patient_id.validators = []
+        form.patient_id.data = current_patient
     
     try:
         # Check if doctor_id and date are provided in query params
@@ -118,10 +137,9 @@ def create():
         if request.method == 'GET' and doctor_id and date:
             try:
                 # Pre-fill the form with the provided doctor and date
-                for doctor in form.doctor_id.iter_choices():
-                    if doctor[0].id == doctor_id:
-                        form.doctor_id.data = doctor[0]
-                        break
+                doctor = Doctor.query.get(doctor_id)
+                if doctor:
+                    form.doctor_id.data = doctor
                 
                 form.appointment_date.data = datetime.strptime(date, '%Y-%m-%d').date()
                 
@@ -134,6 +152,18 @@ def create():
                     user_message="Invalid date or time format provided", 
                     context={"doctor_id": doctor_id, "date": date, "time": time}
                 )
+            except Exception as e:
+                # Handle any other errors
+                ErrorHandler.handle_error(
+                    e, 
+                    user_message="An error occurred while loading the form", 
+                    context={"doctor_id": doctor_id, "date": date, "time": time}
+                )
+        
+        # For patients, we need to validate manually because patient_id is pre-set
+        if is_patient and request.method == 'POST':
+            # Temporarily set patient_id to bypass validation
+            form.patient_id.data = current_patient
         
         if form.validate_on_submit():
             try:
@@ -143,9 +173,15 @@ def create():
                     datetime.combine(datetime.today(), start_time) + timedelta(minutes=30)
                 ).time()
                 
+                # Determine patient_id based on user role
+                if is_patient:
+                    patient_id = current_patient.id
+                else:
+                    patient_id = form.patient_id.data.id
+                
                 # Create a new appointment
                 appointment = Appointment(
-                    patient_id=form.patient_id.data.id,
+                    patient_id=patient_id,
                     doctor_id=form.doctor_id.data.id,
                     appointment_date=form.appointment_date.data,
                     start_time=start_time,
@@ -195,19 +231,20 @@ def create():
             user_message="An error occurred while processing your request. Please try again."
         )
     
-    return render_template('appointment/create.html', form=form)
+    return render_template(
+        'appointment/create.html', 
+        form=form, 
+        is_patient=is_patient,
+        current_patient=current_patient
+    )
 
 
 @appointment_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
-@role_required(['admin', 'doctor', 'receptionist'])
+@role_required(['admin', 'receptionist'])
 def edit(id):
-    """Edit an existing appointment"""
+    """Edit an existing appointment - Only admin and receptionist can edit"""
     appointment = Appointment.query.get_or_404(id)
-    
-    # Check permissions
-    if current_user.role == 'doctor' and current_user.doctor.id != appointment.doctor_id:
-        abort(403)  # Forbidden - doctors can only edit their own appointments
     
     form = AppointmentForm(obj=appointment)
     
@@ -307,16 +344,27 @@ def delete(id):
 
 @appointment_bp.route('/update-status/<int:id>', methods=['POST'])
 @login_required
-@role_required(['admin', 'doctor', 'receptionist'])
 def update_status(id):
     """Update the status of an appointment"""
     appointment = Appointment.query.get_or_404(id)
     
-    # Check permissions
-    if current_user.role == 'doctor' and current_user.doctor.id != appointment.doctor_id:
-        abort(403)  # Forbidden
-    
     status = request.form.get('status')
+    
+    # Check permissions based on role and status
+    if current_user.role == 'patient':
+        # Patients can only cancel their own appointments
+        if current_user.patient.id != appointment.patient_id:
+            abort(403)  # Not their appointment
+        if status != 'cancelled':
+            flash('Patients can only cancel appointments.', 'error')
+            return redirect(url_for('appointment.view', id=appointment.id))
+    elif current_user.role == 'doctor':
+        # Doctors can only update status of their own appointments
+        if current_user.doctor.id != appointment.doctor_id:
+            abort(403)
+    elif current_user.role not in ['admin', 'receptionist']:
+        abort(403)  # Other roles not allowed
+    
     if status in ['scheduled', 'completed', 'cancelled', 'no_show']:
         appointment.status = status
         db.session.commit()
@@ -340,6 +388,11 @@ def calendar():
 @login_required
 def available_slots():
     """Display available appointment slots for a selected doctor and date"""
+    # Doctors should not be able to book appointments
+    if current_user.role == 'doctor':
+        flash('Doctors cannot book appointments. Patients book appointments with you.', 'warning')
+        return redirect(url_for('appointment.list'))
+    
     doctor_id = request.args.get('doctor_id', type=int)
     date = request.args.get('date')
     
@@ -358,7 +411,7 @@ def available_slots():
             # Get doctor information
             doctor = Doctor.query.get_or_404(doctor_id)
             doctor_name = doctor.full_name
-            doctor_department = doctor.department.name if doctor.department else "No Department"
+            doctor_department = doctor.specialization if doctor.specialization else "No Specialization"
             
             # Get day of week (0=Monday, 6=Sunday)
             day_of_week = date_obj.weekday()
@@ -374,8 +427,12 @@ def available_slots():
                 # Get available slots
                 slots = Schedule.get_available_slots(doctor_id, date_obj)
             
-        except ValueError:
+        except ValueError as e:
             flash('Invalid date format', 'error')
+            current_app.logger.error(f"Date parsing error: {e}")
+        except Exception as e:
+            flash('An error occurred while fetching available slots', 'error')
+            current_app.logger.error(f"Error in available_slots: {e}")
     
     today = datetime.now().strftime('%Y-%m-%d')
     doctors = Doctor.query.join(Doctor.user).filter_by(is_active=True).all()

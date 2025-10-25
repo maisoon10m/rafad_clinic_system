@@ -10,7 +10,7 @@
         </div>
         <div class="col-auto">
             <div class="btn-group">
-                <a href="{{ url_for('schedule.create') }}" class="btn btn-primary">
+                <a href="{{ url_for('schedule.add') }}" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Create Schedule
                 </a>
                 <a href="{{ url_for('schedule.list') }}" class="btn btn-secondary">
@@ -86,8 +86,11 @@
             allowClear: true
         });
         
-        // Initialize tooltips
-        $('[data-toggle="tooltip"]').tooltip();
+        // Initialize tooltips (Bootstrap 5)
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
     });
 </script>
 {% endblock %}

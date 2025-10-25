@@ -17,9 +17,16 @@ from app.models import User, db
 
 class LoginForm(FlaskForm):
     """Login form for user authentication"""
+    role = SelectField('Login As', 
+        choices=[
+            ('patient', 'Patient'),
+            ('doctor', 'Doctor'),
+            ('admin', 'Administrator')
+        ],
+        validators=[DataRequired(message="Please select your role")]
+    )
     email = StringField('Email', validators=[
         DataRequired(message="Email is required"), 
-        Email(message="Please enter a valid email address"),
         Length(1, 120, message="Email must be between 1 and 120 characters")
     ])
     password = PasswordField('Password', validators=[

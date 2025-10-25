@@ -51,16 +51,17 @@ def add():
         
         if existing_schedule:
             flash('This schedule overlaps with an existing schedule for the same day.', 'danger')
-            return render_template('schedule/add.html', form=form)
+            return render_template('schedule/create.html', form=form)
         
         new_schedule = Schedule(
             doctor_id=doctor.id,
             day_of_week=form.day_of_week.data,
             start_time=form.start_time.data,
             end_time=form.end_time.data,
-            is_available=form.is_available.data,
-            break_start=form.break_start.data if form.break_start.data else None,
-            break_end=form.break_end.data if form.break_end.data else None
+            is_active=form.is_available.data if hasattr(form, 'is_available') else True,
+            appointment_duration=form.appointment_duration.data if hasattr(form, 'appointment_duration') else 30,
+            break_duration=form.break_duration.data if hasattr(form, 'break_duration') else 0,
+            notes=form.notes.data if hasattr(form, 'notes') else None
         )
         
         db.session.add(new_schedule)
@@ -68,7 +69,7 @@ def add():
         flash('Schedule added successfully.', 'success')
         return redirect(url_for('schedule.manage'))
     
-    return render_template('schedule/add.html', form=form)
+    return render_template('schedule/create.html', form=form)
 
 
 @schedule_bp.route('/edit/<int:schedule_id>', methods=['GET', 'POST'])
@@ -121,9 +122,10 @@ def edit(schedule_id):
         schedule.day_of_week = form.day_of_week.data
         schedule.start_time = form.start_time.data
         schedule.end_time = form.end_time.data
-        schedule.is_available = form.is_available.data
-        schedule.break_start = form.break_start.data if form.break_start.data else None
-        schedule.break_end = form.break_end.data if form.break_end.data else None
+        schedule.is_active = form.is_available.data if hasattr(form, 'is_available') else schedule.is_active
+        schedule.appointment_duration = form.appointment_duration.data if hasattr(form, 'appointment_duration') else schedule.appointment_duration
+        schedule.break_duration = form.break_duration.data if hasattr(form, 'break_duration') else schedule.break_duration
+        schedule.notes = form.notes.data if hasattr(form, 'notes') else schedule.notes
         
         db.session.commit()
         flash('Schedule updated successfully.', 'success')

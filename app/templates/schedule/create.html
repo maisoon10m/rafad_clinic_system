@@ -23,19 +23,11 @@
             <form method="POST">
                 {{ form.csrf_token }}
                 
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> You are creating a schedule for yourself.
+                </div>
+                
                 <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            {{ form.doctor_id.label(class="form-control-label") }}
-                            {{ form.doctor_id(class="form-control" + (" is-invalid" if form.doctor_id.errors else ""), id="doctor-select") }}
-                            {% for error in form.doctor_id.errors %}
-                                <div class="invalid-feedback">
-                                    {{ error }}
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    
                     <div class="col-md-6">
                         <div class="form-group">
                             {{ form.day_of_week.label(class="form-control-label") }}
@@ -78,46 +70,36 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            {{ form.appointment_duration.label(class="form-control-label") }}
-                            <div class="input-group">
-                                {{ form.appointment_duration(class="form-control" + (" is-invalid" if form.appointment_duration.errors else "")) }}
-                                <div class="input-group-append">
-                                    <span class="input-group-text">minutes</span>
-                                </div>
-                            </div>
-                            {% for error in form.appointment_duration.errors %}
+                            {{ form.break_start.label(class="form-control-label") }}
+                            {{ form.break_start(class="form-control" + (" is-invalid" if form.break_start.errors else ""), type="time") }}
+                            {% for error in form.break_start.errors %}
                                 <div class="invalid-feedback">
                                     {{ error }}
                                 </div>
                             {% endfor %}
-                            <small class="form-text text-muted">Duration of each appointment slot in minutes</small>
+                            <small class="form-text text-muted">Optional: Start time of break</small>
                         </div>
                     </div>
                     
                     <div class="col-md-6">
                         <div class="form-group">
-                            {{ form.break_duration.label(class="form-control-label") }}
-                            <div class="input-group">
-                                {{ form.break_duration(class="form-control" + (" is-invalid" if form.break_duration.errors else "")) }}
-                                <div class="input-group-append">
-                                    <span class="input-group-text">minutes</span>
-                                </div>
-                            </div>
-                            {% for error in form.break_duration.errors %}
+                            {{ form.break_end.label(class="form-control-label") }}
+                            {{ form.break_end(class="form-control" + (" is-invalid" if form.break_end.errors else ""), type="time") }}
+                            {% for error in form.break_end.errors %}
                                 <div class="invalid-feedback">
                                     {{ error }}
                                 </div>
                             {% endfor %}
-                            <small class="form-text text-muted">Break time between appointments (0 for no break)</small>
+                            <small class="form-text text-muted">Optional: End time of break</small>
                         </div>
                     </div>
                 </div>
                 
                 <div class="form-group">
-                    <div class="custom-control custom-switch">
-                        {{ form.is_active(class="custom-control-input" + (" is-invalid" if form.is_active.errors else "")) }}
-                        {{ form.is_active.label(class="custom-control-label") }}
-                        {% for error in form.is_active.errors %}
+                    <div class="form-check">
+                        {{ form.is_available(class="form-check-input" + (" is-invalid" if form.is_available.errors else "")) }}
+                        {{ form.is_available.label(class="form-check-label") }}
+                        {% for error in form.is_available.errors %}
                             <div class="invalid-feedback">
                                 {{ error }}
                             </div>
@@ -125,16 +107,6 @@
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    {{ form.notes.label(class="form-control-label") }}
-                    {{ form.notes(class="form-control" + (" is-invalid" if form.notes.errors else ""), rows=3) }}
-                    {% for error in form.notes.errors %}
-                        <div class="invalid-feedback">
-                            {{ error }}
-                        </div>
-                    {% endfor %}
-                    <small class="form-text text-muted">Optional notes about this schedule (lunch breaks, special instructions, etc.)</small>
-                </div>
                 
                 <div class="form-group mt-4">
                     <button type="submit" class="btn btn-primary">
@@ -151,12 +123,6 @@
 {% block scripts %}
 <script>
     $(document).ready(function() {
-        // Initialize select2 for doctor dropdown
-        $('#doctor-select').select2({
-            placeholder: 'Select a doctor',
-            allowClear: true
-        });
-        
         // Time validation
         $('#start_time, #end_time').on('change', function() {
             const startTime = $('#start_time').val();

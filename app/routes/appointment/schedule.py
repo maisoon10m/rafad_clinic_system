@@ -225,15 +225,10 @@ def weekly_view():
     if doctor_id:
         schedules_query = schedules_query.filter_by(doctor_id=doctor_id)
     
-    # Join with Doctor and Department if department filter is active
-    if department_id:
-        schedules_query = schedules_query.join(Doctor).filter(Doctor.department_id == department_id)
-    
     schedules = schedules_query.all()
     
-    # Get all doctors and departments for the filter dropdowns
+    # Get all doctors for the filter dropdowns
     doctors = Doctor.query.join(Doctor.user).filter_by(is_active=True).all()
-    departments = []  # Placeholder - need to implement department model
     
     # Organize schedules by doctor and day
     doctor_schedules = {}
@@ -244,7 +239,7 @@ def weekly_view():
         if doctor_id not in doctor_schedules:
             doctor_schedules[doctor_id] = {
                 'name': doctor.full_name,
-                'department': doctor.department.name if doctor.department else "No Department",
+                'department': doctor.specialization if doctor.specialization else "No Specialization",
                 'days': {}
             }
         
@@ -264,6 +259,5 @@ def weekly_view():
     return render_template(
         'schedule/weekly_view.html',
         doctor_schedules=doctor_schedules,
-        doctors=doctors,
-        departments=departments
+        doctors=doctors
     )

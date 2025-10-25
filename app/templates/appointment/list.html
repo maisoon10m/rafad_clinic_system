@@ -8,25 +8,31 @@
         <div class="col">
             <h1>Appointments</h1>
         </div>
+        {% if current_user.role != 'doctor' %}
         <div class="col-auto">
+            {% if current_user.role == 'patient' %}
+            <a href="{{ url_for('appointment.available_slots') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Book Appointment
+            </a>
+            {% else %}
             <a href="{{ url_for('appointment.create') }}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> New Appointment
             </a>
+            {% endif %}
         </div>
+        {% endif %}
     </div>
 
     <div class="card shadow">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">All Appointments</h5>
             <div>
-                <form class="form-inline" method="GET">
+                <form class="d-flex" method="GET">
                     <div class="input-group">
                         <input type="text" name="search" class="form-control" placeholder="Search appointments..." value="{{ request.args.get('search', '') }}">
-                        <div class="input-group-append">
-                            <button type="submit" class="btn btn-outline-primary">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -54,13 +60,13 @@
                                     <td>{{ appointment.appointment_time.strftime('%H:%M') }}</td>
                                     <td>
                                         {% if appointment.status == 'scheduled' %}
-                                            <span class="badge badge-primary">Scheduled</span>
+                                            <span class="badge bg-primary">Scheduled</span>
                                         {% elif appointment.status == 'completed' %}
-                                            <span class="badge badge-success">Completed</span>
+                                            <span class="badge bg-success">Completed</span>
                                         {% elif appointment.status == 'cancelled' %}
-                                            <span class="badge badge-danger">Cancelled</span>
+                                            <span class="badge bg-danger">Cancelled</span>
                                         {% elif appointment.status == 'no_show' %}
-                                            <span class="badge badge-warning">No Show</span>
+                                            <span class="badge bg-warning text-dark">No Show</span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -68,14 +74,17 @@
                                             <a href="{{ url_for('appointment.view', id=appointment.id) }}" class="btn btn-sm btn-info">
                                                 <i class="fas fa-eye"></i>
                                             </a>
+                                            {% if current_user.role in ['admin', 'receptionist'] %}
                                             <a href="{{ url_for('appointment.edit', id=appointment.id) }}" class="btn btn-sm btn-primary">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal{{ appointment.id }}">
+                                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ appointment.id }}">
                                                 <i class="fas fa-trash"></i>
                                             </button>
+                                            {% endif %}
                                         </div>
                                         
+                                        {% if current_user.role in ['admin', 'receptionist'] %}
                                         <!-- Delete Modal -->
                                         <div class="modal fade" id="deleteModal{{ appointment.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
                                             <div class="modal-dialog" role="document">
@@ -98,6 +107,7 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        {% endif %}
                                     </td>
                                 </tr>
                             {% endfor %}

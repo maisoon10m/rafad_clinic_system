@@ -35,7 +35,7 @@ class AppointmentForm(FlaskForm):
     doctor_id = QuerySelectField(
         'Doctor',
         query_factory=get_doctors,
-        get_label=lambda d: f"{d.full_name} ({d.department.name if d.department else 'No Department'})",
+        get_label=lambda d: f"{d.full_name} ({d.specialization if d.specialization else 'No Specialization'})",
         get_pk=lambda d: d.id,
         allow_blank=False,
         validators=[DataRequired()]

@@ -38,7 +38,6 @@ def get_doctor_schedule(doctor_id):
         'doctor': {
             'id': doctor.id,
             'name': doctor.full_name,
-            'department': doctor.department.name if doctor.department else None,
             'specialization': doctor.specialization
         },
         'schedules': formatted_schedules

@@ -20,10 +20,33 @@
             <h5 class="mb-0">Appointment Details</h5>
         </div>
         <div class="card-body">
+            {% if is_patient and request.args.get('doctor_id') and request.args.get('date') and request.args.get('time') %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> <strong>Confirm Your Appointment</strong><br>
+                You're booking an appointment from an available slot. The doctor, date, and time are already selected. 
+                Please provide the reason for your visit to complete the booking.
+            </div>
+            {% endif %}
+            
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>Please correct the following errors:</strong>
+                <ul>
+                {% for field_name, errors in form.errors.items() %}
+                    {% for error in errors %}
+                        <li>{{ field_name }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
             <form method="POST">
                 {{ form.csrf_token }}
                 
                 <div class="row">
+                    {% if not is_patient %}
+                    <!-- Only show patient selection for staff (receptionist, admin, doctor) -->
                     <div class="col-md-6">
                         <div class="form-group">
                             {{ form.patient_id.label(class="form-control-label") }}
@@ -35,11 +58,25 @@
                             {% endfor %}
                         </div>
                     </div>
+                    {% else %}
+                    <!-- Show patient info for patients (read-only) -->
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-control-label">Patient</label>
+                            <input type="text" class="form-control" value="{{ current_patient.full_name }}" readonly>
+                            <small class="form-text text-muted">Booking appointment for yourself</small>
+                        </div>
+                    </div>
+                    {% endif %}
                     
                     <div class="col-md-6">
                         <div class="form-group">
                             {{ form.doctor_id.label(class="form-control-label") }}
+                            {% if is_patient and request.args.get('doctor_id') %}
+                            {{ form.doctor_id(class="form-control", id="doctor-select", readonly=true) }}
+                            {% else %}
                             {{ form.doctor_id(class="form-control" + (" is-invalid" if form.doctor_id.errors else ""), id="doctor-select") }}
+                            {% endif %}
                             {% for error in form.doctor_id.errors %}
                                 <div class="invalid-feedback">
                                     {{ error }}
@@ -53,7 +90,11 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             {{ form.appointment_date.label(class="form-control-label") }}
+                            {% if is_patient and request.args.get('date') %}
+                            {{ form.appointment_date(class="form-control", type="date", readonly=true) }}
+                            {% else %}
                             {{ form.appointment_date(class="form-control" + (" is-invalid" if form.appointment_date.errors else ""), type="date") }}
+                            {% endif %}
                             {% for error in form.appointment_date.errors %}
                                 <div class="invalid-feedback">
                                     {{ error }}
@@ -65,7 +106,11 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             {{ form.appointment_time.label(class="form-control-label") }}
+                            {% if is_patient and request.args.get('time') %}
+                            {{ form.appointment_time(class="form-control", type="time", readonly=true) }}
+                            {% else %}
                             {{ form.appointment_time(class="form-control" + (" is-invalid" if form.appointment_time.errors else ""), type="time") }}
+                            {% endif %}
                             {% for error in form.appointment_time.errors %}
                                 <div class="invalid-feedback">
                                     {{ error }}
