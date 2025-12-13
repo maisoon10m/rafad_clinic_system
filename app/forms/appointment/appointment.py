@@ -4,7 +4,6 @@ Form classes for appointment management in Rafad Clinic System
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SelectField, DateField, TimeField, HiddenField
 from wtforms.validators import DataRequired, Optional, Length, ValidationError
-from wtforms_sqlalchemy.fields import QuerySelectField
 from datetime import datetime, date, time
 from app.models.doctor import Doctor
 from app.models.patient import Patient
@@ -12,34 +11,36 @@ from app.forms.validators import DateInFuture, TimeInBusinessHours, EndTimeAfter
 
 
 def get_doctors():
-    """Return a query of active doctors"""
-    return Doctor.query.join(Doctor.user).filter_by(is_active=True).all()
+    """Return a list of active doctors as choices"""
+    doctors = Doctor.query.join(Doctor.user).filter_by(is_active=True).all()
+    return [(d.id, f"{d.full_name} ({d.specialization if d.specialization else 'No Specialization'})") for d in doctors]
 
 
 def get_patients():
-    """Return a query of active patients"""
-    return Patient.query.join(Patient.user).filter_by(is_active=True).all()
+    """Return a list of active patients as choices"""
+    patients = Patient.query.join(Patient.user).filter_by(is_active=True).all()
+    return [(p.id, p.full_name) for p in patients]
 
 
 class AppointmentForm(FlaskForm):
     """Form for creating and editing appointments"""
-    patient_id = QuerySelectField(
+    patient_id = SelectField(
         'Patient',
-        query_factory=get_patients,
-        get_label='full_name',
-        get_pk=lambda p: p.id,
-        allow_blank=False,
+        coerce=int,
         validators=[DataRequired()]
     )
     
-    doctor_id = QuerySelectField(
+    doctor_id = SelectField(
         'Doctor',
-        query_factory=get_doctors,
-        get_label=lambda d: f"{d.full_name} ({d.specialization if d.specialization else 'No Specialization'})",
-        get_pk=lambda d: d.id,
-        allow_blank=False,
+        coerce=int,
         validators=[DataRequired()]
     )
+    
+    def __init__(self, *args, **kwargs):
+        super(AppointmentForm, self).__init__(*args, **kwargs)
+        # Populate choices dynamically
+        self.patient_id.choices = get_patients()
+        self.doctor_id.choices = get_doctors()
     
     appointment_date = DateField(
         'Date', 

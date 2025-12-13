@@ -123,9 +123,8 @@ def create():
             flash('Patient profile not found. Please contact support.', 'error')
             return redirect(url_for('main.index'))
         
-        # For patients, set patient_id to current patient and bypass validation
-        form.patient_id.validators = []
-        form.patient_id.data = current_patient
+        # For patients, set patient_id to current patient ID
+        form.patient_id.data = current_patient.id
     
     try:
         # Check if doctor_id and date are provided in query params
@@ -136,10 +135,8 @@ def create():
         
         if request.method == 'GET' and doctor_id and date:
             try:
-                # Pre-fill the form with the provided doctor and date
-                doctor = Doctor.query.get(doctor_id)
-                if doctor:
-                    form.doctor_id.data = doctor
+                # Pre-fill the form with the provided doctor ID
+                form.doctor_id.data = doctor_id
                 
                 form.appointment_date.data = datetime.strptime(date, '%Y-%m-%d').date()
                 
@@ -177,12 +174,12 @@ def create():
                 if is_patient:
                     patient_id = current_patient.id
                 else:
-                    patient_id = form.patient_id.data.id
+                    patient_id = form.patient_id.data
                 
                 # Create a new appointment
                 appointment = Appointment(
                     patient_id=patient_id,
-                    doctor_id=form.doctor_id.data.id,
+                    doctor_id=form.doctor_id.data,
                     appointment_date=form.appointment_date.data,
                     start_time=start_time,
                     end_time=end_time,
@@ -201,7 +198,7 @@ def create():
                 
                 if not is_available:
                     flash(f'Cannot book this appointment: {reason}', 'error')
-                    return render_template('appointment/create.html', form=form)
+                    return render_template('appointment/create.html', form=form, is_patient=is_patient, current_patient=current_patient)
                 
                 db.session.add(appointment)
                 db.session.commit()
@@ -246,16 +243,27 @@ def edit(id):
     """Edit an existing appointment - Only admin and receptionist can edit"""
     appointment = Appointment.query.get_or_404(id)
     
-    form = AppointmentForm(obj=appointment)
+    form = AppointmentForm()
+    
+    if request.method == 'GET':
+        # Pre-populate form with appointment data
+        form.patient_id.data = appointment.patient_id
+        form.doctor_id.data = appointment.doctor_id
+        form.appointment_date.data = appointment.appointment_date
+        form.appointment_time.data = appointment.start_time
+        form.end_time.data = appointment.end_time
+        form.reason.data = appointment.reason
+        form.status.data = appointment.status
+        form.notes.data = appointment.notes
     
     if form.validate_on_submit():
         # Check if the appointment time is available if date, time, or doctor changed
         if (form.appointment_date.data != appointment.appointment_date or 
             form.appointment_time.data != appointment.start_time or
-            form.doctor_id.data.id != appointment.doctor_id):
+            form.doctor_id.data != appointment.doctor_id):
             
             is_available, reason = Appointment.check_availability(
-                doctor_id=form.doctor_id.data.id,
+                doctor_id=form.doctor_id.data,
                 date=form.appointment_date.data,
                 time=form.appointment_time.data,
                 exclude_appointment_id=appointment.id,
@@ -273,8 +281,8 @@ def edit(id):
         ).time()
         
         # Update appointment fields
-        appointment.patient_id = form.patient_id.data.id
-        appointment.doctor_id = form.doctor_id.data.id
+        appointment.patient_id = form.patient_id.data
+        appointment.doctor_id = form.doctor_id.data
         appointment.appointment_date = form.appointment_date.data
         appointment.start_time = start_time
         appointment.end_time = end_time
