@@ -27,7 +27,7 @@ class AppointmentForm(FlaskForm):
     patient_id = SelectField(
         'Patient',
         coerce=int,
-        validators=[DataRequired()]
+        validators=[Optional()]  # Changed to Optional so patients can book for themselves
     )
     
     doctor_id = SelectField(

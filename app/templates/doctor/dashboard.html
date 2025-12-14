@@ -13,7 +13,7 @@
                 <div class="list-group list-group-flush">
                     <a href="{{ url_for('doctor.dashboard') }}" class="list-group-item list-group-item-action active">Dashboard</a>
                     <a href="{{ url_for('doctor.profile') }}" class="list-group-item list-group-item-action">Profile</a>
-                    <a href="{{ url_for('schedule.list') }}" class="list-group-item list-group-item-action">My Schedule</a>
+                    <a href="{{ url_for('schedule.manage') }}" class="list-group-item list-group-item-action">My Schedule</a>
                     <a href="{{ url_for('appointment.list') }}" class="list-group-item list-group-item-action">All Appointments</a>
                 </div>
             </div>
@@ -38,7 +38,7 @@
                                 <a href="{{ url_for('doctor.profile') }}" class="btn btn-outline-primary">
                                     <i class="fas fa-user-edit me-1"></i> Update Profile
                                 </a>
-                                <a href="{{ url_for('schedule.list') }}" class="btn btn-outline-primary">
+                                <a href="{{ url_for('schedule.manage') }}" class="btn btn-outline-primary">
                                     <i class="fas fa-calendar-alt me-1"></i> Manage Schedule
                                 </a>
                                 <a href="{{ url_for('appointment.list') }}" class="btn btn-primary">

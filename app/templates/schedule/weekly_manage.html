@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Weekly Schedule{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h1>Manage Weekly Schedule</h1>
+            <p class="text-muted">Set your availability for each day of the week</p>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Weekly Availability</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th style="width: 15%;">Day</th>
+                            <th style="width: 20%;">Start Time</th>
+                            <th style="width: 20%;">End Time</th>
+                            <th style="width: 15%;">Status</th>
+                            <th style="width: 30%;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set days = [
+                            (0, 'Monday'),
+                            (1, 'Tuesday'),
+                            (2, 'Wednesday'),
+                            (3, 'Thursday'),
+                            (4, 'Friday'),
+                            (5, 'Saturday'),
+                            (6, 'Sunday')
+                        ] %}
+                        
+                        {% for day_num, day_name in days %}
+                            {% set day_schedule = schedules|selectattr('day_of_week', 'equalto', day_num)|list %}
+                            <tr>
+                                <td><strong>{{ day_name }}</strong></td>
+                                {% if day_schedule %}
+                                    {% set schedule = day_schedule[0] %}
+                                    <td>{{ schedule.start_time.strftime('%I:%M %p') }}</td>
+                                    <td>{{ schedule.end_time.strftime('%I:%M %p') }}</td>
+                                    <td>
+                                        {% if schedule.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('schedule.edit', schedule_id=schedule.id) }}" 
+                                           class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                    </td>
+                                {% else %}
+                                    <td colspan="3" class="text-muted">Not set</td>
+                                    <td>
+                                        <a href="{{ url_for('schedule.add') }}?day={{ day_num }}" 
+                                           class="btn btn-sm btn-success">
+                                            <i class="fas fa-plus"></i> Add Schedule
+                                        </a>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow mt-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Quick Actions</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Copy Schedule</h6>
+                    <p class="text-muted small">Copy one day's schedule to multiple days</p>
+                    <button class="btn btn-sm btn-outline-primary" disabled>
+                        <i class="fas fa-copy"></i> Copy Schedule (Coming Soon)
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <h6>Bulk Operations</h6>
+                    <p class="text-muted small">Set same hours for multiple days</p>
+                    <button class="btn btn-sm btn-outline-primary" disabled>
+                        <i class="fas fa-tasks"></i> Bulk Edit (Coming Soon)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

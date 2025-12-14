@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Manage My Schedule{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h1>Manage My Schedule</h1>
+            <p class="text-muted">View and manage your weekly availability</p>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('schedule.add') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Schedule
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Weekly Schedule</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if schedules %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Day</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for schedule in schedules %}
+                                <tr>
+                                    <td>
+                                        <strong>
+                                            {% if schedule.day_of_week == 0 %}Monday
+                                            {% elif schedule.day_of_week == 1 %}Tuesday
+                                            {% elif schedule.day_of_week == 2 %}Wednesday
+                                            {% elif schedule.day_of_week == 3 %}Thursday
+                                            {% elif schedule.day_of_week == 4 %}Friday
+                                            {% elif schedule.day_of_week == 5 %}Saturday
+                                            {% elif schedule.day_of_week == 6 %}Sunday
+                                            {% endif %}
+                                        </strong>
+                                    </td>
+                                    <td>{{ schedule.start_time.strftime('%I:%M %p') }}</td>
+                                    <td>{{ schedule.end_time.strftime('%I:%M %p') }}</td>
+                                    <td>
+                                        {% set duration_seconds = (schedule.end_time.hour * 3600 + schedule.end_time.minute * 60) - (schedule.start_time.hour * 3600 + schedule.start_time.minute * 60) %}
+                                        {% set hours = duration_seconds // 3600 %}
+                                        {% set minutes = (duration_seconds % 3600) // 60 %}
+                                        {{ hours }}h {{ minutes }}m
+                                    </td>
+                                    <td>
+                                        {% if schedule.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{{ url_for('schedule.edit', schedule_id=schedule.id) }}" 
+                                               class="btn btn-sm btn-primary" 
+                                               title="Edit Schedule">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                            <form action="{{ url_for('schedule.delete', schedule_id=schedule.id) }}" 
+                                                  method="POST" 
+                                                  style="display: inline;"
+                                                  onsubmit="return confirm('Are you sure you want to delete this schedule?');">
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Delete Schedule">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center p-5">
+                    <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+                    <h4>No Schedule Set</h4>
+                    <p class="text-muted">You haven't created any schedule yet. Add your availability to allow patients to book appointments.</p>
+                    <a href="{{ url_for('schedule.add') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create Your First Schedule
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if schedules %}
+    <div class="card shadow mt-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Weekly Overview</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% set days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                {% for day_index in range(7) %}
+                    <div class="col-md-12 mb-3">
+                        <div class="card border-left-primary">
+                            <div class="card-body py-2">
+                                <h6 class="mb-0">{{ days[day_index] }}</h6>
+                                {% set day_schedules = schedules|selectattr('day_of_week', 'equalto', day_index)|list %}
+                                {% if day_schedules %}
+                                    <small class="text-success">
+                                        {% for schedule in day_schedules %}
+                                            <i class="fas fa-clock"></i> 
+                                            {{ schedule.start_time.strftime('%I:%M %p') }} - {{ schedule.end_time.strftime('%I:%M %p') }}
+                                            {% if schedule.is_active %}
+                                                <span class="badge badge-success badge-sm">Active</span>
+                                            {% endif %}
+                                            {% if not loop.last %}<br>{% endif %}
+                                        {% endfor %}
+                                    </small>
+                                {% else %}
+                                    <small class="text-muted">Not available</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

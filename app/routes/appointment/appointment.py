@@ -123,7 +123,8 @@ def create():
             flash('Patient profile not found. Please contact support.', 'error')
             return redirect(url_for('main.index'))
         
-        # For patients, set patient_id to current patient ID
+        # For patients, add themselves to the choices and select it
+        form.patient_id.choices = [(current_patient.id, current_patient.full_name)]
         form.patient_id.data = current_patient.id
     
     try:
@@ -157,10 +158,10 @@ def create():
                     context={"doctor_id": doctor_id, "date": date, "time": time}
                 )
         
-        # For patients, we need to validate manually because patient_id is pre-set
+        # For patients, ensure their ID is in choices before validation
         if is_patient and request.method == 'POST':
-            # Temporarily set patient_id to bypass validation
-            form.patient_id.data = current_patient
+            form.patient_id.choices = [(current_patient.id, current_patient.full_name)]
+            form.patient_id.data = current_patient.id
         
         if form.validate_on_submit():
             try:

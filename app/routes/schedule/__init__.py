@@ -24,7 +24,7 @@ def manage():
     
     schedules = Schedule.query.filter_by(doctor_id=doctor.id).order_by(Schedule.day_of_week, Schedule.start_time).all()
     
-    return render_template('schedule/manage.html', schedules=schedules)
+    return render_template('schedule/weekly_manage.html', schedules=schedules)
 
 
 @schedule_bp.route('/add', methods=['GET', 'POST'])
@@ -38,6 +38,12 @@ def add():
         return redirect(url_for('doctor.profile'))
     
     form = ScheduleForm()
+    
+    # Pre-select day if provided in query parameter
+    if request.method == 'GET':
+        day = request.args.get('day', type=int)
+        if day is not None and 0 <= day <= 6:
+            form.day_of_week.data = day
     
     if form.validate_on_submit():
         # Check for overlapping schedules
@@ -58,10 +64,7 @@ def add():
             day_of_week=form.day_of_week.data,
             start_time=form.start_time.data,
             end_time=form.end_time.data,
-            is_active=form.is_available.data if hasattr(form, 'is_available') else True,
-            appointment_duration=form.appointment_duration.data if hasattr(form, 'appointment_duration') else 30,
-            break_duration=form.break_duration.data if hasattr(form, 'break_duration') else 0,
-            notes=form.notes.data if hasattr(form, 'notes') else None
+            is_active=form.is_available.data if hasattr(form, 'is_available') else True
         )
         
         db.session.add(new_schedule)
@@ -88,7 +91,19 @@ def edit(schedule_id):
     if schedule.doctor_id != doctor.id:
         abort(403)  # Forbidden
     
-    form = ScheduleForm(obj=schedule)
+    form = ScheduleForm()
+    
+    # Manually populate form fields on GET request
+    if request.method == 'GET':
+        form.day_of_week.data = schedule.day_of_week
+        form.start_time.data = schedule.start_time
+        form.end_time.data = schedule.end_time
+        if hasattr(form, 'is_available'):
+            form.is_available.data = schedule.is_active
+        if hasattr(form, 'break_start') and hasattr(schedule, 'break_start'):
+            form.break_start.data = schedule.break_start
+        if hasattr(form, 'break_end') and hasattr(schedule, 'break_end'):
+            form.break_end.data = schedule.break_end
     
     if form.validate_on_submit():
         # Check for overlapping schedules
@@ -122,10 +137,8 @@ def edit(schedule_id):
         schedule.day_of_week = form.day_of_week.data
         schedule.start_time = form.start_time.data
         schedule.end_time = form.end_time.data
-        schedule.is_active = form.is_available.data if hasattr(form, 'is_available') else schedule.is_active
-        schedule.appointment_duration = form.appointment_duration.data if hasattr(form, 'appointment_duration') else schedule.appointment_duration
-        schedule.break_duration = form.break_duration.data if hasattr(form, 'break_duration') else schedule.break_duration
-        schedule.notes = form.notes.data if hasattr(form, 'notes') else schedule.notes
+        if hasattr(form, 'is_available'):
+            schedule.is_active = form.is_available.data
         
         db.session.commit()
         flash('Schedule updated successfully.', 'success')
@@ -194,6 +207,9 @@ def weekly():
 
 @schedule_bp.route('/list')
 @login_required
+@admin_required
 def list():
-    """Display a list of schedules"""
-    return render_template('schedule/list.html')
+    """Display a list of schedules - Admin only"""
+    doctors = Doctor.query.join(Doctor.user).filter_by(is_active=True).all()
+    schedules = Schedule.query.all()
+    return render_template('schedule/list.html', doctors=doctors, schedules=schedules)

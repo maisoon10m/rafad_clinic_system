@@ -17,8 +17,6 @@ class ScheduleForm(FlaskForm):
         (4, 'Friday'),
         (5, 'Saturday'),
         (6, 'Sunday')
-    ], validators=[
-        DataRequired(message="Please select a day of the week")
     ])
     start_time = TimeField('Start Time', validators=[
         DataRequired(message="Start time is required")
